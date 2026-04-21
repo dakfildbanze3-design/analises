@@ -1,0 +1,148 @@
+{
+  "entities": {
+    "users": {
+      "title": "User Profile",
+      "description": "Stores user profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "avatarUrl": { "type": "string", "format": "uri" },
+        "location": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "products": {
+      "title": "Product",
+      "description": "Stores product listings",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "category": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string", "format": "uri" } },
+        "sellerId": { "type": "string" },
+        "sellerPhone": { "type": "string" },
+        "location": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "price", "sellerId", "createdAt"]
+    },
+    "chats": {
+      "title": "Chat",
+      "description": "Stores user conversations",
+      "type": "object",
+      "properties": {
+        "participants": { "type": "array", "items": { "type": "string" } },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "lastMessage": { "type": "string" },
+        "otherUserName": { "type": "string" },
+        "otherUserAvatar": { "type": "string" },
+        "unread": { "type": "boolean" },
+        "unreadCount": { "type": "number" },
+        "online": { "type": "boolean" }
+      },
+      "required": ["participants"]
+    },
+    "notifications": {
+      "title": "Notification",
+      "description": "Stores user notifications and alerts",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["like", "comment", "follow"] },
+        "fromUserId": { "type": "string" },
+        "toUserId": { "type": "string" },
+        "postId": { "type": "string" },
+        "text": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["type", "fromUserId", "toUserId", "text", "read", "createdAt"]
+    },
+    "user_settings": {
+      "title": "User Settings",
+      "description": "Stores user application preferences",
+      "type": "object",
+      "properties": {
+        "pushNotifications": { "type": "boolean" },
+        "invisibleProfile": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "follows": {
+      "title": "Follow",
+      "description": "Stores follow relationships between users",
+      "type": "object",
+      "properties": {
+        "followerId": { "type": "string", "description": "UID of the user following" },
+        "followingId": { "type": "string", "description": "UID of the user being followed" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["followerId", "followingId", "createdAt"]
+    },
+    "calls": {
+      "title": "Call",
+      "description": "Stores WebRTC signaling data for video and audio calls",
+      "type": "object",
+      "properties": {
+        "caller_id": { "type": "string" },
+        "receiver_id": { "type": "string" },
+        "status": { "type": "string", "enum": ["calling", "ringing", "accepted", "rejected", "ended"] },
+        "type": { "type": "string", "enum": ["video", "audio"] },
+        "created_at": { "type": "string", "format": "date-time" },
+        "offer": { "type": "object" },
+        "answer": { "type": "object" }
+      },
+      "required": ["caller_id", "receiver_id", "status", "type", "created_at"]
+    },
+    "search_history": {
+      "title": "Search History",
+      "description": "Stores user search history queries",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "query": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "query", "timestamp"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "users",
+      "description": "User profile documents"
+    },
+    "user_settings/{userId}": {
+      "schema": "user_settings",
+      "description": "User settings documents"
+    },
+    "products/{productId}": {
+      "schema": "products",
+      "description": "Product listing documents"
+    },
+    "chats/{chatId}": {
+      "schema": "chats",
+      "description": "User conversation documents"
+    },
+    "notifications/{notificationId}": {
+      "schema": "notifications",
+      "description": "User notification documents"
+    },
+    "follows/{followId}": {
+      "schema": "follows",
+      "description": "Follow relationship documents"
+    },
+    "calls/{callId}": {
+      "schema": "calls",
+      "description": "Video/Audio call signaling documents"
+    },
+    "search_history/{historyId}": {
+      "schema": "search_history",
+      "description": "User search history entries"
+    }
+  }
+}

@@ -1,0 +1,161 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 0. Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ===============================================================
+    // Helper Functions (The Primitives)
+    // ===============================================================
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // ===============================================================
+    // Users Collection
+    // ===============================================================
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if isOwner(userId);
+      allow update: if isSignedIn() && (
+        isOwner(userId) ||
+        // Allow interactions/counters (sparingly)
+        incoming().diff(existing()).affectedKeys().hasAny(['followersCount', 'fcmToken', 'followingCount'])
+      );
+    }
+
+    // ===============================================================
+    // Follows Collection
+    // ===============================================================
+    match /follows/{followId} {
+      allow read: if true;
+      allow create: if isSignedIn() && 
+                      incoming().followerId == request.auth.uid &&
+                      isValidId(incoming().followingId) &&
+                      exists(/databases/$(database)/documents/users/$(incoming().followingId));
+      allow delete: if isSignedIn() && (
+        (resource != null && resource.data.followerId == request.auth.uid) ||
+        (followId.split('_')[0] == request.auth.uid)
+      );
+    }
+
+    // ===============================================================
+    // Products Collection
+    // ===============================================================
+    match /products/{productId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && 
+                      incoming().sellerId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        existing().sellerId == request.auth.uid ||
+        // Interaction: Views and Likes
+        incoming().diff(existing()).affectedKeys().hasAny(['views', 'likedBy'])
+      );
+      allow delete: if isSignedIn() && existing().sellerId == request.auth.uid;
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+        allow update: if isSignedIn() && (
+          existing().userId == request.auth.uid ||
+          incoming().diff(existing()).affectedKeys().hasAny(['likedBy', 'dislikedBy'])
+        );
+        allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+      }
+    }
+
+    // ===============================================================
+    // Chats & Messages
+    // ===============================================================
+    match /chats/{chatId} {
+      allow read: if isSignedIn() && request.auth.uid in resource.data.participants;
+      allow create: if isSignedIn() && request.auth.uid in incoming().participants;
+      allow update: if isSignedIn() && request.auth.uid in existing().participants;
+    }
+
+    match /messages/{messageId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid in resource.data.participants ||
+        resource.data.get('sender_id', '') == request.auth.uid
+      );
+      allow create: if isSignedIn() && 
+                      incoming().sender_id == request.auth.uid &&
+                      request.auth.uid in incoming().participants;
+      allow update: if isSignedIn() && (
+        existing().sender_id == request.auth.uid ||
+        (
+          request.auth.uid in existing().participants &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['status']) &&
+          incoming().status == 'seen'
+        )
+      );
+      allow delete: if isSignedIn() && existing().sender_id == request.auth.uid;
+    }
+
+    // ===============================================================
+    // Notifications
+    // ===============================================================
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && (
+        resource.data.toUserId == request.auth.uid ||
+        resource.data.fromUserId == request.auth.uid
+      );
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && 
+                      resource.data.toUserId == request.auth.uid &&
+                      incoming().diff(existing()).affectedKeys().hasOnly(['read']);
+      allow delete: if isSignedIn() && resource.data.toUserId == request.auth.uid;
+    }
+
+    // ===============================================================
+    // Calls (Signaling)
+    // ===============================================================
+    match /calls/{callId} {
+      allow read, update: if isSignedIn() && (
+        resource.data.caller_id == request.auth.uid ||
+        resource.data.receiver_id == request.auth.uid
+      );
+      allow create: if isSignedIn() && incoming().caller_id == request.auth.uid;
+
+      match /callerCandidates/{candidateId} { allow read, write: if isSignedIn(); }
+      match /receiverCandidates/{candidateId} { allow read, write: if isSignedIn(); }
+    }
+
+    // ===============================================================
+    // Personal Collections
+    // ===============================================================
+    match /user_settings/{userId} { allow read, write: if isOwner(userId); }
+    match /notification_settings/{userId} { allow read, write: if isOwner(userId); }
+    match /payment_methods/{id} { allow read, write: if isSignedIn() && resource.data.user_id == request.auth.uid; }
+    match /transactions/{id} { allow read, write: if isSignedIn() && resource.data.user_id == request.auth.uid; }
+    match /support_tickets/{id} { allow read, write: if isSignedIn() && resource.data.user_id == request.auth.uid; }
+    match /sessions/{id} { allow read, write: if isSignedIn() && resource.data.user_id == request.auth.uid; }
+
+    // ===============================================================
+    // Search History
+    // ===============================================================
+    match /search_history/{historyId} {
+      allow read, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+    }
+  }
+}

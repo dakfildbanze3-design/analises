@@ -1,0 +1,6 @@
+{
+  "name": "Remix: BOLADAS Marketplace",
+  "description": "A premium streetwear and tech marketplace with a dark minimalist aesthetic.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": []
+}
