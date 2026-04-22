@@ -345,7 +345,6 @@ export default function ProductDetail() {
         className="w-full h-full object-cover" 
         src='https://picsum.photos/seed/placeholder/800/800'
         alt="Placeholder"
-        referrerPolicy="no-referrer"
       />
     );
 
@@ -355,8 +354,10 @@ export default function ProductDetail() {
           src={images[0]} 
           className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity" 
           alt="Product"
-          referrerPolicy="no-referrer"
           onClick={() => setSelectedFullImage(images[0])}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/800/800';
+          }}
         />
       );
     }
@@ -375,7 +376,9 @@ export default function ProductDetail() {
               src={img} 
               className="w-full h-full object-cover" 
               alt={`Product image ${idx}`}
-              referrerPolicy="no-referrer"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/800/800';
+              }}
             />
             {idx === 3 && images.length > 4 && (
               <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-bold text-[1.25rem]">
@@ -660,7 +663,9 @@ export default function ProductDetail() {
                         src={comment.avatar} 
                         className="w-10 h-10 rounded-full border border-[#353535]/10 shrink-0 object-cover" 
                         alt="Avatar"
-                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.userId}`;
+                        }}
                       />
                       <div className="flex-1">
                         <div className="mb-1 flex justify-between items-end">
@@ -696,7 +701,9 @@ export default function ProductDetail() {
                             src={reply.avatar} 
                             className="w-8 h-8 rounded-full border border-[#353535]/10 shrink-0 object-cover" 
                             alt="Avatar"
-                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${reply.userId}`;
+                            }}
                          />
                          <div className="flex-1">
                             <div className="mb-1 flex justify-between items-end">
@@ -744,7 +751,9 @@ export default function ProductDetail() {
                     src={auth.currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${auth.currentUser?.uid || 'guest'}`} 
                     className="w-8 h-8 rounded-full border border-[#353535]/10 shrink-0 object-cover" 
                     alt="My Avatar"
-                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${auth.currentUser?.uid || 'guest'}`;
+                    }}
                   />
                   <div className="flex-1 relative bg-surface-container-low rounded-sm">
                     <input 
@@ -787,7 +796,9 @@ export default function ProductDetail() {
               src={selectedFullImage} 
               className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl" 
               alt="Full view"
-              referrerPolicy="no-referrer"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/800/800';
+              }}
             />
           </motion.div>
         )}

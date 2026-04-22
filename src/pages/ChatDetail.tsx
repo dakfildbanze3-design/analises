@@ -520,7 +520,6 @@ export default function ChatDetail() {
                 src={room?.otherUser?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${chatId}`}
                 className="w-9 h-9 rounded-full object-cover"
                 alt="Avatar"
-                referrerPolicy="no-referrer"
               />
               <div className="flex flex-col">
                 <span className="text-[0.875rem] font-bold text-white leading-none mb-0.5">{room?.otherUser?.displayName || 'Carregando...'}</span>

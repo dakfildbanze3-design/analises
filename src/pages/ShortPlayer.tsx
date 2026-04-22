@@ -9,6 +9,7 @@ import { notificationService } from '../services/notificationService';
 import { formatRelativeTime } from '../lib/dateUtils';
 import { shareContent } from '../lib/shareUtils';
 import { chatService } from '../services/chatService';
+import AdBanner from '../components/AdBanner';
 
 type CommentType = {
   id: string;
@@ -485,8 +486,10 @@ export default function ShortPlayer() {
             <img 
                src={product.sellerAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${product.sellerId}`} 
                className="w-[52px] h-[52px] rounded-full object-cover border-2 border-primary/20 shrink-0 cursor-pointer shadow-md" 
-               referrerPolicy="no-referrer"
                onClick={() => navigate(`/user/${product.sellerId}`)}
+               onError={(e) => {
+                 (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${product.sellerId}`;
+               }}
             />
             
             {/* 1px Vertical Separator */}
@@ -622,6 +625,8 @@ export default function ShortPlayer() {
             </button>
          </div>
          )}
+
+         <AdBanner useImageBackground={true} className="mt-4 mx-4" />
       </div>
 
       {/* Up Next List (Single Card full width feed with avatar, strictly video) */}
@@ -658,8 +663,10 @@ export default function ShortPlayer() {
                      <img 
                         src={item.sellerAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.sellerId}`} 
                         className="w-9 h-9 rounded-full object-cover border border-outline-variant/30 flex-shrink-0" 
-                        referrerPolicy="no-referrer"
                         onClick={() => navigate(`/user/${item.sellerId}`)}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.sellerId}`;
+                        }}
                      />
                      
                      <div className="w-[1px] h-[32px] bg-outline-variant/10 mx-2" />

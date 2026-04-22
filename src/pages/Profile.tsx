@@ -108,8 +108,10 @@ export default function ProfilePage() {
             <img 
               className="w-24 h-24 rounded-[3px] object-cover border-2 border-primary-container" 
               src={userProfile?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${auth.currentUser?.uid}`} 
-              referrerPolicy="no-referrer"
               alt="Avatar"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${auth.currentUser?.uid}`;
+              }}
             />
             <div className="absolute bottom-0 right-0 bg-primary-container p-1 rounded-[3px] translate-x-1 translate-y-1">
               <Verified size={16} className="text-white" fill="currentColor" />
@@ -183,7 +185,9 @@ export default function ProfilePage() {
                   className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" 
                   src={product.images?.[0] || 'https://picsum.photos/seed/placeholder/800/800'} 
                   alt={product.name}
-                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/800/800';
+                  }}
                 />
 
                 <div className="absolute bottom-0 left-0 w-full p-3 bg-gradient-to-t from-black/80 to-transparent">

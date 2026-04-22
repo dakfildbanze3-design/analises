@@ -5,6 +5,7 @@ interface AdBannerProps {
   adClient?: string;
   format?: 'auto' | 'fluid' | 'rectangle';
   className?: string;
+  useImageBackground?: boolean;
 }
 
 /**
@@ -14,7 +15,8 @@ export default function AdBanner({
   adSlot = "YOUR_AD_SLOT", 
   adClient = "YOUR_AD_CLIENT", 
   format = "auto",
-  className = "" 
+  className = "",
+  useImageBackground = false
 }: AdBannerProps) {
   const adRef = useRef<HTMLModElement>(null);
   
@@ -43,6 +45,7 @@ export default function AdBanner({
         <span className="text-[0.6rem] text-zinc-600 px-1.5 py-0.5 border border-zinc-700 rounded-sm">AD</span>
       </div>
       <div className="flex items-center justify-center min-h-[100px] relative bg-zinc-950/50">
+        {useImageBackground && <img src="/logo.png" alt="AD" className="absolute inset-0 w-full h-full object-cover opacity-20 blur-[2px]" />}
         {/* Google AdSense / AdMob Tag */}
         <ins 
           ref={adRef}

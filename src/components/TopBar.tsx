@@ -57,12 +57,12 @@ export default function TopBar({ showBack, title = "BOLADAS", rightElement }: To
               <Menu size={20} strokeWidth={3} />
             </button>
           )}
-          <h1 
-            className="text-lg font-black text-white uppercase tracking-tighter cursor-pointer"
-            onClick={() => navigate('/')}
-          >
-            {title}
-          </h1>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
+            <img src="/android-chrome-512x512.png" alt="Logo" className="w-8 h-8 object-contain" />
+            <h1 className="text-lg font-black text-white uppercase tracking-tighter">
+              {title}
+            </h1>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {rightElement ? (

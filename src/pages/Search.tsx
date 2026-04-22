@@ -224,7 +224,9 @@ export default function SearchPage() {
                                 <img 
                                   src={user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} 
                                   className="w-full h-full object-cover"
-                                  referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`;
+                                  }}
                                 />
                               </div>
                               <div className="flex flex-col">
@@ -260,7 +262,9 @@ export default function SearchPage() {
                                 src={product.image || product.images?.[0]} 
                                 alt={product.name}
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/800/800';
+                                }}
                               />
                               {product.productType === 'short' && (
                                 <div className="absolute top-2 right-2 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center">

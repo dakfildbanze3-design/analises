@@ -173,7 +173,7 @@ export default function Home() {
 
       {/* Shorts Header */}
       <div className="px-4 pt-4 pb-2 flex items-center gap-2 bg-surface">
-        <img src="/ChatGPT Image 20 de abr. de 2026, 13_56_03.png" alt="Logo" className="w-8 h-8 object-cover scale-150" />
+        <img src="/logo.png" alt="Logo" className="w-8 h-8 object-cover scale-150" />
         <span className="text-[0.75rem] font-black text-white uppercase tracking-widest">
           Anúncios em Shorts
         </span>
@@ -202,7 +202,9 @@ export default function Home() {
                     src={product.image || product.images?.[0]} 
                     alt={product.name} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/800/800';
+                    }}
                   />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
@@ -255,7 +257,9 @@ export default function Home() {
                       src={product.image} 
                       alt={product.name} 
                       className="w-full h-full object-contain"
-                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/800/800';
+                      }}
                     />
                     {product.discount && (
                       <div className="absolute top-3 left-3 bg-error text-on-error text-[0.625rem] font-black px-2 py-1 rounded-[2px]">{product.discount}</div>
@@ -279,7 +283,9 @@ export default function Home() {
                           src={product.avatar} 
                           alt="Avatar" 
                           className="w-5 h-5 rounded-full object-cover"
-                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${product.sellerId}`;
+                          }}
                         />
                         <div className="flex items-center gap-1.5 text-[0.75rem] font-bold text-on-surface-variant/70 uppercase">
                           <span>{product.author}</span>

@@ -153,7 +153,6 @@ export default function PublicProfile() {
             className="w-full h-full object-cover opacity-60" 
             src={user.coverUrl || `https://api.dicebear.com/7.x/shapes/svg?seed=${id}&backgroundColor=0a0a0a`} 
             alt="Cover"
-            referrerPolicy="no-referrer"
           />
         </div>
         <div className="px-4 -mt-12 relative z-10">
@@ -163,7 +162,9 @@ export default function PublicProfile() {
                 className="w-24 h-24 object-cover rounded-[3px] border-2 border-surface-container-highest bg-zinc-900" 
                 src={user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${id}`} 
                 alt="Profile"
-                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${id}`;
+                }}
               />
             </div>
             <div className="flex gap-1 pb-1">
@@ -225,7 +226,14 @@ export default function PublicProfile() {
               className="bg-surface-container-low border border-outline-variant/10 cursor-pointer rounded-[3px] overflow-hidden"
             >
               <div className="aspect-square w-full overflow-hidden bg-surface-container-highest">
-                <img src={product.images?.[0] || 'https://picsum.photos/seed/placeholder/400/400'} alt={product.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                <img 
+                  src={product.images?.[0] || 'https://picsum.photos/seed/placeholder/400/400'} 
+                  alt={product.name} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/400/400';
+                  }}
+                />
               </div>
               <div className="p-3">
                 <span className="text-[0.55rem] uppercase font-black text-blue-900 tracking-widest">{product.category || 'Geral'}</span>

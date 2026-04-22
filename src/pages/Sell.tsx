@@ -27,6 +27,12 @@ export default function Sell() {
     }
 
     setIsUploading(true);
+    if (!supabase) {
+      alert('Serviço de upload não configurado. Por favor, adicione VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
+      setIsUploading(false);
+      return;
+    }
+
     try {
       const fileExt = file.name.split('.').pop();
       // Simplify filename to avoid folder structure issues with RLS
@@ -165,7 +171,7 @@ export default function Sell() {
             <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
               {images.map((img, index) => (
                 <div key={index} className="relative flex-shrink-0 w-24 h-24 bg-surface-container-low rounded-[3px] overflow-hidden group">
-                  <img src={img} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <img src={img} alt="Preview" className="w-full h-full object-cover" />
                   <button 
                     type="button"
                     onClick={() => removeImage(index)}
