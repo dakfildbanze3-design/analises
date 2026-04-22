@@ -8,6 +8,7 @@ import { formatRelativeTime } from '../lib/dateUtils';
 import { shareContent } from '../lib/shareUtils';
 import { chatService } from '../services/chatService';
 import AdBanner from '../components/AdBanner';
+import { syncGoogleProductsToFirebase, searchMoz } from '../services/searchMoz';
 
 const categories = ['TUDO', 'SAPATILHAS', 'ACESSÓRIOS', 'ROUPAS', 'SERVIÇOS', 'ELETRÔNICOS'];
 
@@ -126,6 +127,51 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCategory, activeSort]);
 
+  // Sync real products from Mozambique via Google Search
+  useEffect(() => {
+    // 1. Fetch from Google and show INSTANTLY
+    const loadInstantProducts = async () => {
+      const items = await searchMoz();
+      if (items && items.length > 0) {
+        const instantProducts = items.map((item: any) => ({
+          id: `google-${item.link}`,
+          name: item.title,
+          description: item.snippet,
+          price: "Consultar",
+          image: item.pagemap?.cse_image?.[0]?.src || item.pagemap?.metatags?.[0]?.['og:image'] || 'https://picsum.photos/seed/placeholder/800/800',
+          author: "Anúncio Web",
+          avatar: "https://www.google.com/favicon.ico",
+          time: 'Agora',
+          views: Math.floor(Math.random() * 500),
+          isExternal: true,
+          externalLink: item.link
+        }));
+        
+        // Add to the top of current products without waiting for Firebase
+        setProducts(prev => {
+          // Avoid duplicates if they already exist in the list
+          const existingIds = new Set(prev.map(p => p.id));
+          const filteredInstant = instantProducts.filter((p: any) => !existingIds.has(p.id));
+          return [...filteredInstant, ...prev];
+        });
+      }
+    };
+
+    loadInstantProducts();
+
+    // 2. Then sync to Firebase in the background (silent)
+    syncGoogleProductsToFirebase().then(() => {
+      console.log("Sincronização em background concluída");
+    });
+
+    // 3. Optional: Auto-refresh every 60 seconds
+    const interval = setInterval(() => {
+      loadInstantProducts();
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const closeOptions = () => setActiveOptionsId(null);
 
   const handleMessageClick = async () => {
@@ -186,7 +232,13 @@ export default function Home() {
             {products.filter((p: any) => p.productType === 'short' || p.videoUrl).map((product: any) => (
               <div 
                 key={`featured-${product.id}`}
-                onClick={() => navigate(`/short/${product.id}`)}
+                onClick={() => {
+                  if (product.isExternal && product.externalLink) {
+                    window.open(product.externalLink, '_blank');
+                  } else {
+                    navigate(`/short/${product.id}`);
+                  }
+                }}
                 className="relative flex-shrink-0 w-[calc(50%-6px)] h-[320px] rounded-[12px] overflow-hidden cursor-pointer group bg-surface-container shadow-sm"
               >
                 {product.videoUrl ? (
@@ -248,7 +300,13 @@ export default function Home() {
             {products.filter((p: any) => !p.videoUrl && p.productType !== 'short').map((product, index) => (
               <React.Fragment key={product.id}>
                 <article 
-                  onClick={() => navigate(`/product/${product.id}`)}
+                  onClick={() => {
+                    if (product.isExternal && product.externalLink) {
+                      window.open(product.externalLink, '_blank');
+                    } else {
+                      navigate(`/product/${product.id}`);
+                    }
+                  }}
                   className="bg-surface pb-4 cursor-pointer"
                 >
                   {/* Image */}

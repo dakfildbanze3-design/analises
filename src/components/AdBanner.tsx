@@ -12,7 +12,7 @@ interface AdBannerProps {
  * AdBanner Component for Google AdSense / AdMob for Web
  */
 export default function AdBanner({ 
-  adSlot = "9113697368", 
+  adSlot = "6870833164", 
   adClient = "ca-pub-7509073601077347", 
   format = "auto",
   className = "",
