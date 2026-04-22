@@ -12,8 +12,8 @@ interface AdBannerProps {
  * AdBanner Component for Google AdSense / AdMob for Web
  */
 export default function AdBanner({ 
-  adSlot = "YOUR_AD_SLOT", 
-  adClient = "YOUR_AD_CLIENT", 
+  adSlot = "9113697368", 
+  adClient = "ca-pub-7509073601077347", 
   format = "auto",
   className = "",
   useImageBackground = false
