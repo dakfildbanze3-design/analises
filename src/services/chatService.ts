@@ -11,7 +11,10 @@ import {
   getDoc,
   setDoc,
   getDocs,
-  limit
+  limit,
+  deleteDoc,
+  Timestamp,
+  deleteField
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 
@@ -60,6 +63,7 @@ export const chatService = {
    * Upload de áudio para o Supabase Storage
    */
   async uploadAudio(blob: Blob): Promise<string> {
+    if (!supabase) throw new Error("Serviço de áudio não configurado (Falta VITE_SUPABASE_URL)");
     const fileName = `${auth.currentUser?.uid}_${Date.now()}.m4a`;
     const { data, error } = await supabase.storage
       .from('chat-audio')
@@ -85,6 +89,7 @@ export const chatService = {
    * Upload de arquivo genérico para o Supabase Storage
    */
   async uploadFile(blob: Blob, bucket: string, extension: string): Promise<string> {
+    if (!supabase) throw new Error("Serviço de upload não configurado (Falta VITE_SUPABASE_URL)");
     const fileName = `${auth.currentUser?.uid}_${Date.now()}.${extension}`;
     const { data, error } = await supabase.storage
       .from(bucket)
@@ -345,5 +350,148 @@ export const chatService = {
       }, 0);
       callback(total);
     });
+  },
+
+  /**
+   * Silenciar conversa
+   */
+  async toggleMute(chatId: string, currentMuted: boolean): Promise<boolean> {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return currentMuted;
+
+    const settingRef = doc(db, 'chat_settings', `${chatId}_${userId}`);
+    await setDoc(settingRef, {
+      chat_id: chatId,
+      user_id: userId,
+      muted: !currentMuted,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    return !currentMuted;
+  },
+
+  /**
+   * Fixar conversa
+   */
+  async togglePin(chatId: string, currentPinned: boolean): Promise<boolean> {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return currentPinned;
+
+    const settingRef = doc(db, 'chat_settings', `${chatId}_${userId}`);
+    await setDoc(settingRef, {
+      chat_id: chatId,
+      user_id: userId,
+      pinned: !currentPinned,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    return !currentPinned;
+  },
+
+  /**
+   * Subscreve às definições de um chat para o utilizador atual (muted, pinned)
+   */
+  subscribeToChatSettings(chatId: string, callback: (settings: { muted: boolean, pinned: boolean }) => void) {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return () => {};
+
+    const settingRef = doc(db, 'chat_settings', `${chatId}_${userId}`);
+    return onSnapshot(settingRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        callback({
+          muted: !!data.muted,
+          pinned: !!data.pinned
+        });
+      } else {
+        callback({ muted: false, pinned: false });
+      }
+    });
+  },
+
+  /**
+   * Bloquear usuário
+   */
+  async blockUser(blockedId: string) {
+    const userId = auth.currentUser?.uid;
+    if (!userId || !blockedId) return;
+
+    await setDoc(doc(db, 'blocked_users', `${userId}_${blockedId}`), {
+      blocker_id: userId,
+      blocked_id: blockedId,
+      created_at: serverTimestamp()
+    });
+  },
+
+  /**
+   * Verificar se o utilizador está bloqueado por alguém ou bloqueou alguém
+   */
+  async checkBlockStatus(otherUserId: string): Promise<boolean> {
+    const userId = auth.currentUser?.uid;
+    if (!userId || !otherUserId) return false;
+
+    // Verificar se eu bloqueei
+    const myBlockSnap = await getDoc(doc(db, 'blocked_users', `${userId}_${otherUserId}`));
+    if (myBlockSnap.exists()) return true;
+
+    // Verificar se fui bloqueado
+    const otherBlockSnap = await getDoc(doc(db, 'blocked_users', `${otherUserId}_${userId}`));
+    if (otherBlockSnap.exists()) return true;
+
+    return false;
+  },
+
+  /**
+   * Apagar conversa para o utilizador atual
+   */
+  async deleteChatForCurrentUser(chatId: string) {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+
+    const chatRef = doc(db, 'chats', chatId);
+    await updateDoc(chatRef, {
+       [`deleted_for_${userId}`]: true,
+       [`unreadCount_${userId}`]: 0
+    });
+  },
+
+  /**
+   * Pesquisar mensagens dentro de um chat
+   */
+  async searchMessages(chatId: string, searchText: string): Promise<Message[]> {
+    const userId = auth.currentUser?.uid;
+    if (!userId || !searchText.trim()) return [];
+
+    const q = query(
+      collection(db, 'messages'),
+      where('chat_id', '==', chatId),
+      where('participants', 'array-contains', userId)
+    );
+
+    const snapshot = await getDocs(q);
+    const searchLower = searchText.toLowerCase();
+
+    return snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() } as Message))
+      .filter(msg => msg.text?.toLowerCase().includes(searchLower))
+      .sort((a, b) => b.created_at?.toMillis() - a.created_at?.toMillis());
+  },
+
+  /**
+   * Denunciar usuário
+   */
+  async reportUser(reportedId: string, chatId: string, reason: string) {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+
+    await addDoc(collection(db, 'reports'), {
+      reporter_id: userId,
+      reported_id: reportedId,
+      chat_id: chatId,
+      reason,
+      status: 'pending',
+      created_at: serverTimestamp()
+    });
   }
 };
+

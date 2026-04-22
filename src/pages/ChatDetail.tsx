@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Send, Loader2, Phone, MoreVertical, Mic, Paperclip, Video, Smile, Play, Pause, Image as ImageIcon, FileVideo, X } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Phone, MoreVertical, Mic, Paperclip, Video, Smile, Play, Pause, Image as ImageIcon, FileVideo, X, User, BellOff, Bell, UserX, Trash2, Pin, PinOff, Search as SearchIcon, Flag, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth } from '../lib/firebase';
 import { chatService, Message, ChatRoom } from '../services/chatService';
@@ -51,7 +51,7 @@ const isOnlyEmojis = (str?: string): boolean => {
   const stripped = str.replace(/[\s\n]/g, '');
   if (stripped.length === 0) return false;
   try {
-    const re = /^[\p{Extended_Pictographic}\u200d\uFE0F]+$/u;
+    const re = new RegExp('^[\\p{Extended_Pictographic}\\u200d\\uFE0F]+$', 'u');
     return re.test(stripped) && Array.from(stripped).length <= 3;
   } catch (e) {
     return false;
@@ -197,6 +197,19 @@ export default function ChatDetail() {
   const [showCamera, setShowCamera] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Menu states
+  const [showMenu, setShowMenu] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [searchResults, setSearchResults] = useState<Message[]>([]);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const startPosRef = useRef<{ x: number, y: number } | null>(null);
@@ -337,13 +350,38 @@ export default function ChatDetail() {
     // Subscribe to room info
     const unsubRoom = chatService.subscribeToChatRoom(chatId, (roomData) => {
       setRoom(roomData);
+      
+      // Check block status whenever room data updates
+      if (roomData.otherUser?.id) {
+        chatService.checkBlockStatus(roomData.otherUser.id).then(setIsBlocked);
+      }
+    });
+
+    // Subscribe to settings (muted, pinned)
+    const unsubSettings = chatService.subscribeToChatSettings(chatId, (settings) => {
+      setIsMuted(settings.muted);
+      setIsPinned(settings.pinned);
     });
 
     return () => {
       unsubMessages();
       unsubRoom();
+      unsubSettings();
     };
   }, [chatId]);
+
+  // Handle Search
+  useEffect(() => {
+    if (isSearching && searchText.trim() && chatId) {
+      const delaySearch = setTimeout(async () => {
+        const results = await chatService.searchMessages(chatId, searchText);
+        setSearchResults(results);
+      }, 300);
+      return () => clearTimeout(delaySearch);
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchText, isSearching, chatId]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -408,6 +446,42 @@ export default function ChatDetail() {
     }
   };
 
+  const handleMute = async () => {
+    if (!chatId) return;
+    const result = await chatService.toggleMute(chatId, isMuted);
+    setIsMuted(result);
+    setShowMenu(false);
+  };
+
+  const handlePin = async () => {
+    if (!chatId) return;
+    const result = await chatService.togglePin(chatId, isPinned);
+    setIsPinned(result);
+    setShowMenu(false);
+  };
+
+  const handleBlock = async () => {
+    if (!room?.otherUser?.id) return;
+    await chatService.blockUser(room.otherUser.id);
+    setIsBlocked(true);
+    setShowBlockModal(false);
+    setShowMenu(false);
+  };
+
+  const handleDeleteChat = async () => {
+    if (!chatId) return;
+    await chatService.deleteChatForCurrentUser(chatId);
+    setShowDeleteModal(false);
+    navigate('/chat');
+  };
+
+  const handleReport = async () => {
+    if (!room?.otherUser?.id || !chatId || !reportReason.trim()) return;
+    await chatService.reportUser(room.otherUser.id, chatId, reportReason);
+    setShowReportModal(false);
+    setReportReason('');
+  };
+
   if (loading && !messages.length) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center">
@@ -419,42 +493,218 @@ export default function ChatDetail() {
   return (
     <div className="flex flex-col h-screen bg-black/90">
       {/* Header */}
-      <header className="bg-black/80 backdrop-blur-md px-4 py-3 flex items-center justify-between sticky top-0 z-50 border-b border-white/5">
+      <header className="bg-black/80 backdrop-blur-md px-4 py-3 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="p-1 -ml-1 text-white hover:bg-white/10 rounded-full transition-colors active:scale-95">
             <ArrowLeft size={24} />
           </button>
-          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => room?.otherUser && navigate(`/user/${room.otherUser.id}`)}>
-            <img 
-              src={room?.otherUser?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${chatId}`}
-              className="w-9 h-9 rounded-full object-cover border border-white/20"
-              alt="Avatar"
-              referrerPolicy="no-referrer"
-            />
-            <div className="flex flex-col">
-              <span className="text-[0.875rem] font-bold text-white leading-none mb-0.5">{room?.otherUser?.displayName || 'Carregando...'}</span>
-              <span className="text-[0.625rem] text-zinc-400 font-bold uppercase tracking-widest leading-none">Online</span>
+          
+          {isSearching ? (
+            <div className="flex-1 ml-2 flex items-center bg-white/10 rounded-full px-4 py-1.5">
+              <SearchIcon size={16} className="text-white mr-2" />
+              <input 
+                autoFocus
+                type="text"
+                placeholder="Pesquisar mensagens..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className="bg-transparent border-none outline-none text-white font-bold text-[0.875rem] w-full placeholder:text-white/50"
+              />
+              <button onClick={() => setIsSearching(false)} className="text-white hover:opacity-70 transition-opacity">
+                <X size={18} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => room?.otherUser && navigate(`/user/${room.otherUser.id}`)}>
+              <img 
+                src={room?.otherUser?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${chatId}`}
+                className="w-9 h-9 rounded-full object-cover"
+                alt="Avatar"
+                referrerPolicy="no-referrer"
+              />
+              <div className="flex flex-col">
+                <span className="text-[0.875rem] font-bold text-white leading-none mb-0.5">{room?.otherUser?.displayName || 'Carregando...'}</span>
+                <span className="text-[0.625rem] text-white font-bold opacity-60 uppercase tracking-widest leading-none">Online</span>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {!isSearching && (
+          <div className="flex items-center gap-1">
+            <button 
+              onClick={() => handleStartCall('video')}
+              className="p-2 text-white hover:bg-white/10 rounded-full active:scale-95 transition-all"
+            >
+              <Video size={20} />
+            </button>
+            <button 
+              onClick={() => handleStartCall('audio')}
+              className="p-2 text-white hover:bg-white/10 rounded-full active:scale-95 transition-all"
+            >
+              <Phone size={20} />
+            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setShowMenu(!showMenu)}
+                className="p-2 text-white hover:bg-white/10 rounded-full active:scale-95 transition-all"
+              >
+                <MoreVertical size={20} />
+              </button>
+              
+              <AnimatePresence>
+                {showMenu && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setShowMenu(false)} 
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -10, x: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -10, x: 10 }}
+                      className="absolute right-0 mt-2 w-56 bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden z-50 py-2"
+                    >
+                      <button 
+                        onClick={() => {
+                          setShowMenu(false);
+                          room?.otherUser && navigate(`/user/${room.otherUser.id}`);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-[0.875rem] text-white font-bold hover:bg-white/5 transition-colors"
+                      >
+                        <User size={18} className="text-white" />
+                        <span>Ver Perfil</span>
+                      </button>
+                      
+                      <button 
+                        onClick={handleMute}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-[0.875rem] text-white font-bold hover:bg-white/5 transition-colors"
+                      >
+                        {isMuted ? (
+                          <>
+                            <Bell size={18} className="text-white" />
+                            <span>Ativar Notificações</span>
+                          </>
+                        ) : (
+                          <>
+                            <BellOff size={18} className="text-white" />
+                            <span>Silenciar</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button 
+                        onClick={handlePin}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-[0.875rem] text-white font-bold hover:bg-white/5 transition-colors"
+                      >
+                        {isPinned ? (
+                          <>
+                            <PinOff size={18} className="text-white" />
+                            <span>Desafixar</span>
+                          </>
+                        ) : (
+                          <>
+                            <Pin size={18} className="text-white" />
+                            <span>Fixar no Topo</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button 
+                        onClick={() => {
+                          setIsSearching(true);
+                          setShowMenu(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-[0.875rem] text-white font-bold hover:bg-white/5 transition-colors"
+                      >
+                        <SearchIcon size={18} className="text-white" />
+                        <span>Pesquisar no Chat</span>
+                      </button>
+
+                      <button 
+                        onClick={() => {
+                          setShowBlockModal(true);
+                          setShowMenu(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-[0.875rem] text-white font-bold hover:bg-white/5 transition-colors"
+                      >
+                        <UserX size={18} className="text-white" />
+                        <span>{isBlocked ? 'Usuário Bloqueado' : 'Bloquear Usuário'}</span>
+                      </button>
+
+                      <button 
+                        onClick={() => {
+                          setShowDeleteModal(true);
+                          setShowMenu(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-[0.875rem] text-white font-bold hover:bg-white/5 transition-colors"
+                      >
+                        <Trash2 size={18} className="text-white" />
+                        <span>Apagar Conversa</span>
+                      </button>
+
+                      <button 
+                        onClick={() => {
+                          setShowReportModal(true);
+                          setShowMenu(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-[0.875rem] text-white font-bold hover:bg-white/5 transition-colors"
+                      >
+                        <Flag size={18} className="text-white" />
+                        <span>Denunciar</span>
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
           </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <button 
-            onClick={() => handleStartCall('video')}
-            className="p-2 text-white hover:bg-white/10 rounded-full active:scale-95 transition-all text-blue-400"
-          >
-            <Video size={20} />
-          </button>
-          <button 
-            onClick={() => handleStartCall('audio')}
-            className="p-2 text-white hover:bg-white/10 rounded-full active:scale-95 transition-all"
-          >
-            <Phone size={20} />
-          </button>
-          <button className="p-2 text-white hover:bg-white/10 rounded-full active:scale-95 transition-all">
-            <MoreVertical size={20} />
-          </button>
-        </div>
+        )}
       </header>
+
+      {/* Search Overlay */}
+      <AnimatePresence>
+        {isSearching && searchText.trim() && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="absolute top-[64px] left-0 right-0 max-h-[60vh] bg-zinc-900 z-[45] overflow-y-auto shadow-2xl"
+          >
+            <div className="p-2 px-4 bg-white/5 flex items-center justify-between">
+              <span className="text-[0.6rem] font-bold text-white uppercase tracking-widest">
+                {searchResults.length} Resultados encontrados
+              </span>
+            </div>
+            {searchResults.length === 0 ? (
+              <div className="p-8 text-center text-zinc-500">
+                <p className="text-sm font-bold text-white">Nenhuma mensagem encontrada para "{searchText}"</p>
+              </div>
+            ) : (
+              searchResults.map(msg => (
+                <div 
+                  key={msg.id} 
+                  className="p-4 hover:bg-white/5 cursor-pointer transition-colors"
+                  onClick={() => {
+                    setIsSearching(false);
+                    setSearchText('');
+                  }}
+                >
+                  <div className="flex justify-between items-center mb-1">
+                    <span className={`text-[0.65rem] font-bold uppercase text-white`}>
+                      {msg.sender_id === auth.currentUser?.uid ? 'Tu' : room?.otherUser?.displayName}
+                    </span>
+                    <span className="text-[0.6rem] text-white font-bold opacity-40">
+                      {formatRelativeTime(msg.created_at)}
+                    </span>
+                  </div>
+                  <p className="text-[0.875rem] text-white font-bold line-clamp-2">{msg.text}</p>
+                </div>
+              ))
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Messages Area */}
       <div 
@@ -478,7 +728,7 @@ export default function ChatDetail() {
             if (msg.type === 'call_log') {
               return (
                 <div key={msg.id} className="flex justify-center my-2">
-                  <div className="bg-white/5 border border-white/5 px-4 py-1 rounded-full">
+                  <div className="bg-white/5 px-4 py-1 rounded-full">
                     <span className="text-[0.65rem] text-white/40 font-medium uppercase tracking-wider">{msg.text}</span>
                   </div>
                 </div>
@@ -495,7 +745,7 @@ export default function ChatDetail() {
                 {/* Avatar */}
                 <img 
                   src={msg.sender_avatar || (isMe ? (auth.currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.sender_id}`) : (room?.otherUser?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.sender_id}`))}
-                  className={`w-9 h-9 rounded-full object-cover border border-white/10 shrink-0 ${pureEmoji ? 'mt-4' : 'mt-0.5'}`}
+                  className={`w-9 h-9 rounded-full object-cover shrink-0 ${pureEmoji ? 'mt-4' : 'mt-0.5'}`}
                   alt="Avatar"
                   referrerPolicy="no-referrer"
                 />
@@ -572,7 +822,9 @@ export default function ChatDetail() {
           );
         })
       )}
-    </div>      {/* Input Area */}
+      </div>
+
+      {/* Input Area */}
       <div className="absolute bottom-0 left-0 right-0 bg-black px-4 pb-4 pt-3 z-50">
         <AnimatePresence>
           {showEmojiPicker && (
@@ -580,7 +832,7 @@ export default function ChatDetail() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="absolute bottom-[calc(100%+8px)] left-4 right-4 bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[60]"
+              className="absolute bottom-[calc(100%+8px)] left-4 right-4 bg-zinc-900 rounded-2xl shadow-2xl overflow-hidden z-[60]"
             >
               <EmojiPicker onSelect={(emoji) => setInputText((prev) => prev + emoji)} />
             </motion.div>
@@ -591,7 +843,7 @@ export default function ChatDetail() {
                initial={{ opacity: 0, scale: 0.9, y: 20 }}
                animate={{ opacity: 1, scale: 1, y: 0 }}
                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-               className="absolute bottom-[calc(100%+8px)] left-4 bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl p-4 flex flex-col gap-4 z-[60]"
+               className="absolute bottom-[calc(100%+8px)] left-4 bg-zinc-900 rounded-2xl shadow-2xl p-4 flex flex-col gap-4 z-[60]"
              >
                <button 
                  onClick={() => {
@@ -604,12 +856,12 @@ export default function ChatDetail() {
                    };
                    input.click();
                  }}
-                 className="flex items-center gap-3 text-white hover:text-blue-400 transition-colors"
+                 className="flex items-center gap-3 text-white hover:opacity-70 transition-opacity"
                >
-                 <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
+                 <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
                    <ImageIcon size={20} className="text-white" />
                  </div>
-                 <span className="text-sm font-medium">Imagens</span>
+                 <span className="text-sm font-bold">Imagens</span>
                </button>
                <button 
                  onClick={() => {
@@ -622,18 +874,29 @@ export default function ChatDetail() {
                    };
                    input.click();
                  }}
-                 className="flex items-center gap-3 text-white hover:text-purple-400 transition-colors"
+                 className="flex items-center gap-3 text-white hover:opacity-70 transition-opacity"
                >
-                 <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center">
+                 <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
                    <FileVideo size={20} className="text-white" />
                  </div>
-                 <span className="text-sm font-medium">Vídeos</span>
+                 <span className="text-sm font-bold">Vídeos</span>
                </button>
              </motion.div>
           )}
         </AnimatePresence>
 
-        <form onSubmit={handleSend} className="flex items-center gap-2">
+        {isBlocked ? (
+          <div className="bg-red-500/10 rounded-2xl p-4 text-center">
+            <p className="text-red-500 text-sm font-medium uppercase tracking-wider">
+              {room?.otherUser?.displayName} está bloqueado
+            </p>
+            <p className="text-[0.7rem] text-zinc-500 mt-1 uppercase tracking-widest">
+              Não podes enviar nem receber mensagens
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={handleSend} className="flex items-center gap-2">
+
             
           {!isRecording && (
             <>
@@ -730,6 +993,7 @@ export default function ChatDetail() {
             </button>
           )}
         </form>
+      )}
       </div>
 
       <AnimatePresence>
@@ -738,6 +1002,94 @@ export default function ChatDetail() {
             onCapture={handleCameraCapture}
             onClose={() => setShowCamera(false)}
           />
+        )}
+        
+        {showReportModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-zinc-900 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl"
+            >
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-6 text-white font-bold">
+                  <Flag size={24} className="text-white" />
+                  <h3 className="text-lg font-black uppercase tracking-tight text-white">Denunciar Usuário</h3>
+                </div>
+                
+                <p className="text-[0.875rem] text-white mb-4 font-bold">
+                  Motivo da denúncia para <span className="text-white underline">{room?.otherUser?.displayName}</span>:
+                </p>
+                
+                <textarea 
+                  autoFocus
+                  placeholder="Descreva aqui..."
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  className="w-full bg-white/5 rounded-2xl p-4 text-white text-sm outline-none font-bold min-h-[120px] resize-none"
+                />
+              </div>
+              
+              <div className="flex">
+                <button 
+                  onClick={() => setShowReportModal(false)}
+                  className="flex-1 p-5 text-[0.875rem] font-bold text-white hover:bg-white/5 transition-colors uppercase tracking-widest"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={handleReport}
+                  disabled={!reportReason.trim()}
+                  className="flex-1 p-5 text-[0.875rem] font-bold text-white hover:bg-white/5 transition-colors uppercase tracking-widest disabled:opacity-30"
+                >
+                  Confirmar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {showBlockModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-zinc-900 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-6"
+            >
+              <div className="flex items-center gap-3 mb-4 text-white font-bold">
+                <UserX size={24} className="text-white" />
+                <h3 className="text-lg font-black uppercase tracking-tight text-white">Bloquear</h3>
+              </div>
+              <p className="text-white font-bold text-[0.875rem] mb-6">Desejas bloquear este utilizador? Não poderás enviar mensagens.</p>
+              <div className="flex gap-2">
+                <button onClick={() => setShowBlockModal(false)} className="flex-1 py-4 text-white font-bold uppercase tracking-widest hover:bg-white/5 rounded-xl transition-colors">Não</button>
+                <button onClick={handleBlock} className="flex-1 py-4 text-white font-bold uppercase tracking-widest hover:bg-white/5 rounded-xl transition-colors">Sim</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-zinc-900 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-6"
+            >
+              <div className="flex items-center gap-3 mb-4 text-white font-bold">
+                <Trash2 size={24} className="text-white" />
+                <h3 className="text-lg font-black uppercase tracking-tight text-white">Apagar</h3>
+              </div>
+              <p className="text-white font-bold text-[0.875rem] mb-6">Desejas apagar esta conversa permanentemente para ti?</p>
+              <div className="flex gap-2">
+                <button onClick={() => setShowDeleteModal(false)} className="flex-1 py-4 text-white font-bold uppercase tracking-widest hover:bg-white/5 rounded-xl transition-colors">Não</button>
+                <button onClick={handleDeleteChat} className="flex-1 py-4 text-white font-bold uppercase tracking-widest hover:bg-white/5 rounded-xl transition-colors">Sim</button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

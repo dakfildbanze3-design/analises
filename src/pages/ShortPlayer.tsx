@@ -421,7 +421,7 @@ export default function ShortPlayer() {
                   initial={{ opacity: 0, scale: 0.9, y: -10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                  className="absolute top-12 right-0 w-48 bg-zinc-900 rounded-[8px] shadow-2xl flex flex-col overflow-hidden border border-zinc-800 z-[60]"
+                  className="absolute top-12 right-0 w-48 bg-zinc-900 rounded-[8px] shadow-2xl flex flex-col overflow-hidden z-[60]"
                 >
                   <button 
                     onClick={() => {
@@ -429,18 +429,17 @@ export default function ShortPlayer() {
                       if (url) window.open(url, '_blank');
                       setShowOptionsMenu(false);
                     }}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 transition-colors text-left"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left"
                   >
                     <Download size={18} className="text-white" />
-                    <span className="text-[0.875rem] font-medium text-white">Salvar na galeria</span>
+                    <span className="text-[0.875rem] font-bold text-white">Salvar na galeria</span>
                   </button>
-                  <div className="h-[1px] bg-zinc-800 mx-2" />
                   <button 
                     onClick={handleDeleteProduct}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 transition-colors text-left"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left"
                   >
-                    <Trash2 size={18} className="text-error" />
-                    <span className="text-[0.875rem] font-medium text-error">Excluir</span>
+                    <Trash2 size={18} className="text-white" />
+                    <span className="text-[0.875rem] font-bold text-white">Excluir</span>
                   </button>
                 </motion.div>
               )}

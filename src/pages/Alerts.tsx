@@ -62,7 +62,7 @@ export default function AlertsPage() {
       className="pt-12 pb-16 min-h-screen bg-black"
     >
       {/* Header */}
-      <div className="bg-zinc-900/50 backdrop-blur-md px-4 py-4 flex flex-col gap-3 border-b border-white/5 sticky top-0 z-10">
+      <div className="bg-zinc-900/50 backdrop-blur-md px-4 py-4 flex flex-col gap-3 sticky top-0 z-10">
         <div className="flex justify-between items-center">
           <h2 className="text-[1.25rem] font-bold text-white">Notificações</h2>
           <button 
@@ -113,12 +113,12 @@ export default function AlertsPage() {
             <div 
               key={notif.id}
               onClick={() => handleMarkAsRead(notif.id, notif.postId)}
-              className={`p-4 flex gap-3 items-center border-b border-white/5 transition-colors cursor-pointer ${notif.read ? 'bg-transparent opacity-60' : 'bg-white/5 border-l-2 border-l-white'}`}
+              className={`p-4 flex gap-3 items-center transition-colors cursor-pointer ${notif.read ? 'bg-transparent opacity-60 font-bold' : 'bg-white/5 border-l-2 border-l-white font-bold'}`}
             >
               <div className="relative">
                 <img 
                   src={(notif as any).fromUserAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${notif.fromUserId}`} 
-                  className="w-12 h-12 rounded-full object-cover border border-white/10"
+                  className="w-12 h-12 rounded-full object-cover"
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute -bottom-1 -right-1 bg-black rounded-full p-1 border border-white/10">

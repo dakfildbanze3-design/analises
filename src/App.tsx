@@ -31,20 +31,31 @@ function AppContent() {
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setUser(user);
-      setLoading(false);
-      
-      if (user) {
-        // Register FCM Token
-        notificationService.saveFCMToken(user.uid);
-      }
+    const unsubscribe = auth.onAuthStateChanged(
+      (user) => {
+        setUser(user);
+        setLoading(false);
+        
+        if (user) {
+          notificationService.saveFCMToken(user.uid);
+        }
 
-      const isAuthPage = ['/login', '/register', '/profile-setup'].includes(location.pathname);
-      if (!user && !isAuthPage && !showSplash) {
-        navigate('/login');
+        const isAuthPage = ['/login', '/register', '/profile-setup'].includes(location.pathname);
+        if (!user && !isAuthPage && !showSplash) {
+          navigate('/login');
+        }
+      },
+      (error) => {
+        console.error("Firebase Auth Error:", error);
+        // This helps the user see if their API key/Auth Domain is misconfigured in production
+        if (error.message.includes('auth/unauthorized-domain')) {
+          alert("Domínio não autorizado no Firebase! Adiciona este URL nas definições de Autenticação do Firebase.");
+        } else {
+          alert("Erro de Autenticação: " + error.message);
+        }
+        setLoading(false);
       }
-    });
+    );
     return () => unsubscribe();
   }, [location.pathname, navigate, showSplash]);
 

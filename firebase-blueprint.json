@@ -109,6 +109,69 @@
         "timestamp": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "query", "timestamp"]
+    },
+    "chat_settings": {
+      "title": "Chat Settings",
+      "description": "Per-user settings for a specific chat",
+      "type": "object",
+      "properties": {
+        "chat_id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "muted": { "type": "boolean" },
+        "pinned": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["chat_id", "user_id"]
+    },
+    "blocked_users": {
+      "title": "Blocked User",
+      "description": "Stores blocking relationships between users",
+      "type": "object",
+      "properties": {
+        "blocker_id": { "type": "string" },
+        "blocked_id": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["blocker_id", "blocked_id", "created_at"]
+    },
+    "reports": {
+      "title": "User Report",
+      "description": "Stores abuse reports against users",
+      "type": "object",
+      "properties": {
+        "reporter_id": { "type": "string" },
+        "reported_id": { "type": "string" },
+        "chat_id": { "type": "string" },
+        "reason": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "reviewed"] },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["reporter_id", "reported_id", "reason", "created_at"]
+    },
+    "messages": {
+      "title": "Message",
+      "description": "Stores individual chat messages",
+      "type": "object",
+      "properties": {
+        "chat_id": { "type": "string" },
+        "sender_id": { "type": "string" },
+        "text": { "type": "string" },
+        "type": { "type": "string", "enum": ["text", "audio", "image", "video", "call_log"] },
+        "participants": { "type": "array", "items": { "type": "string" } },
+        "created_at": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["sent", "seen"] }
+      },
+      "required": ["chat_id", "sender_id", "participants", "created_at"]
+    },
+    "candidates": {
+      "title": "ICE Candidate",
+      "description": "WebRTC Ice candidate for signaling",
+      "type": "object",
+      "properties": {
+        "candidate": { "type": "object" },
+        "type": { "type": "string", "enum": ["caller", "receiver"] },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "firestore": {
@@ -143,6 +206,30 @@
     "search_history/{historyId}": {
       "schema": "search_history",
       "description": "User search history entries"
+    },
+    "chat_settings/{settingId}": {
+      "schema": "chat_settings",
+      "description": "User preferences for specific chats"
+    },
+    "messages/{messageId}": {
+      "schema": "messages",
+      "description": "Individual messages within a chat"
+    },
+    "calls/{callId}/callerCandidates/{candidateId}": {
+      "schema": "candidates",
+      "description": "WebRTC candidates from the caller"
+    },
+    "calls/{callId}/receiverCandidates/{candidateId}": {
+      "schema": "candidates",
+      "description": "WebRTC candidates from the receiver"
+    },
+    "blocked_users/{blockId}": {
+      "schema": "blocked_users",
+      "description": "User blocking relationships"
+    },
+    "reports/{reportId}": {
+      "schema": "reports",
+      "description": "User abuse reports"
     }
   }
 }

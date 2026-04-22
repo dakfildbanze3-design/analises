@@ -2,108 +2,103 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 0. Global Safety Net (Default Deny)
+    // ==========================================
+    // 0. Global Safety Net
+    // ==========================================
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // ===============================================================
-    // Helper Functions (The Primitives)
-    // ===============================================================
-    function isSignedIn() {
-      return request.auth != null;
-    }
+    // ==========================================
+    // Primitives & Helpers
+    // ==========================================
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
     
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
+    // ==========================================
+    // Core Collections
+    // ==========================================
 
-    function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
-    }
-
-    function incoming() {
-      return request.resource.data;
-    }
-
-    function existing() {
-      return resource.data;
-    }
-
-    // ===============================================================
-    // Users Collection
-    // ===============================================================
+    // Users
     match /users/{userId} {
       allow read: if true;
       allow create: if isOwner(userId);
-      allow update: if isSignedIn() && (
-        isOwner(userId) ||
-        // Allow interactions/counters (sparingly)
-        incoming().diff(existing()).affectedKeys().hasAny(['followersCount', 'fcmToken', 'followingCount'])
+      allow update: if isOwner(userId) || (
+        isSignedIn() && 
+        incoming().diff(existing()).affectedKeys().hasOnly(['followersCount', 'fcmToken', 'followingCount'])
       );
     }
 
-    // ===============================================================
-    // Follows Collection
-    // ===============================================================
+    // Follows
     match /follows/{followId} {
       allow read: if true;
-      allow create: if isSignedIn() && 
-                      incoming().followerId == request.auth.uid &&
-                      isValidId(incoming().followingId) &&
-                      exists(/databases/$(database)/documents/users/$(incoming().followingId));
+      allow create: if isSignedIn() && (
+        incoming().followerId == request.auth.uid &&
+        isValidId(incoming().followingId)
+      );
       allow delete: if isSignedIn() && (
-        (resource != null && resource.data.followerId == request.auth.uid) ||
-        (followId.split('_')[0] == request.auth.uid)
+        existing().followerId == request.auth.uid ||
+        followId.split('_')[0] == request.auth.uid
       );
     }
 
-    // ===============================================================
-    // Products Collection
-    // ===============================================================
+    // Products
     match /products/{productId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && 
-                      incoming().sellerId == request.auth.uid;
+      allow read: if true;
+      allow create: if isSignedIn() && incoming().sellerId == request.auth.uid;
       allow update: if isSignedIn() && (
-        existing().sellerId == request.auth.uid ||
-        // Interaction: Views and Likes
+        (existing() != null && existing().sellerId == request.auth.uid) ||
+        // Allow public counters (views, likedBy)
         incoming().diff(existing()).affectedKeys().hasAny(['views', 'likedBy'])
       );
       allow delete: if isSignedIn() && existing().sellerId == request.auth.uid;
 
+      // Comments subcollection
       match /comments/{commentId} {
         allow read: if true;
         allow create: if isSignedIn() && incoming().userId == request.auth.uid;
         allow update: if isSignedIn() && (
-          existing().userId == request.auth.uid ||
+          (existing() != null && existing().userId == request.auth.uid) ||
           incoming().diff(existing()).affectedKeys().hasAny(['likedBy', 'dislikedBy'])
         );
         allow delete: if isSignedIn() && existing().userId == request.auth.uid;
       }
     }
 
-    // ===============================================================
-    // Chats & Messages
-    // ===============================================================
+    // Chats
     match /chats/{chatId} {
-      allow read: if isSignedIn() && request.auth.uid in resource.data.participants;
-      allow create: if isSignedIn() && request.auth.uid in incoming().participants;
-      allow update: if isSignedIn() && request.auth.uid in existing().participants;
+      allow read: if isSignedIn() && (
+        request.auth.uid in existing().get('participants', [])
+      );
+      allow create: if isSignedIn() && (
+        request.auth.uid in incoming().get('participants', [])
+      );
+      allow update: if isSignedIn() && (
+        request.auth.uid in existing().get('participants', []) ||
+        request.auth.uid in incoming().get('participants', [])
+      );
+      allow delete: if isSignedIn() && (
+        request.auth.uid in existing().get('participants', [])
+      );
     }
 
+    // Messages
     match /messages/{messageId} {
       allow read: if isSignedIn() && (
-        request.auth.uid in resource.data.participants ||
-        resource.data.get('sender_id', '') == request.auth.uid
+        request.auth.uid in existing().get('participants', []) ||
+        existing().get('sender_id', '') == request.auth.uid
       );
-      allow create: if isSignedIn() && 
-                      incoming().sender_id == request.auth.uid &&
-                      request.auth.uid in incoming().participants;
+      allow create: if isSignedIn() && (
+        incoming().sender_id == request.auth.uid &&
+        request.auth.uid in incoming().get('participants', [])
+      );
       allow update: if isSignedIn() && (
         existing().sender_id == request.auth.uid ||
         (
-          request.auth.uid in existing().participants &&
+          request.auth.uid in existing().get('participants', []) &&
           incoming().diff(existing()).affectedKeys().hasOnly(['status']) &&
           incoming().status == 'seen'
         )
@@ -111,51 +106,75 @@ service cloud.firestore {
       allow delete: if isSignedIn() && existing().sender_id == request.auth.uid;
     }
 
-    // ===============================================================
-    // Notifications
-    // ===============================================================
+    // Chat Settings / Notifications / etc.
+    match /chat_settings/{settingId} {
+      allow read, write: if isSignedIn() && (
+        settingId.split('_')[1] == request.auth.uid ||
+        settingId.split('_')[0] == request.auth.uid ||
+        (existing() != null && existing().get('user_id', '') == request.auth.uid)
+      );
+    }
+
     match /notifications/{notificationId} {
       allow read: if isSignedIn() && (
-        resource.data.toUserId == request.auth.uid ||
-        resource.data.fromUserId == request.auth.uid
+        existing().get('toUserId', '') == request.auth.uid ||
+        existing().get('fromUserId', '') == request.auth.uid
       );
+      allow create: if isSignedIn() && incoming().fromUserId == request.auth.uid;
+      allow update: if isSignedIn() && existing().get('toUserId', '') == request.auth.uid;
+      allow delete: if isSignedIn() && existing().get('toUserId', '') == request.auth.uid;
+    }
+
+    match /blocked_users/{blockId} {
+      allow read: if isSignedIn() && (
+        blockId.split('_')[0] == request.auth.uid ||
+        blockId.split('_')[1] == request.auth.uid ||
+        (existing() != null && (
+          existing().get('blocker_id', '') == request.auth.uid ||
+          existing().get('blocked_id', '') == request.auth.uid
+        ))
+      );
+      allow create: if isSignedIn() && incoming().blocker_id == request.auth.uid;
+      allow delete: if isSignedIn() && (
+        existing().get('blocker_id', '') == request.auth.uid ||
+        blockId.split('_')[0] == request.auth.uid
+      );
+    }
+
+    match /reports/{reportId} {
       allow create: if isSignedIn();
-      allow update: if isSignedIn() && 
-                      resource.data.toUserId == request.auth.uid &&
-                      incoming().diff(existing()).affectedKeys().hasOnly(['read']);
-      allow delete: if isSignedIn() && resource.data.toUserId == request.auth.uid;
+      allow read: if false; // Only admins (via console)
     }
 
-    // ===============================================================
-    // Calls (Signaling)
-    // ===============================================================
-    match /calls/{callId} {
-      allow read, update: if isSignedIn() && (
-        resource.data.caller_id == request.auth.uid ||
-        resource.data.receiver_id == request.auth.uid
-      );
-      allow create: if isSignedIn() && incoming().caller_id == request.auth.uid;
-
-      match /callerCandidates/{candidateId} { allow read, write: if isSignedIn(); }
-      match /receiverCandidates/{candidateId} { allow read, write: if isSignedIn(); }
-    }
-
-    // ===============================================================
-    // Personal Collections
-    // ===============================================================
-    match /user_settings/{userId} { allow read, write: if isOwner(userId); }
-    match /notification_settings/{userId} { allow read, write: if isOwner(userId); }
-    match /payment_methods/{id} { allow read, write: if isSignedIn() && resource.data.user_id == request.auth.uid; }
-    match /transactions/{id} { allow read, write: if isSignedIn() && resource.data.user_id == request.auth.uid; }
-    match /support_tickets/{id} { allow read, write: if isSignedIn() && resource.data.user_id == request.auth.uid; }
-    match /sessions/{id} { allow read, write: if isSignedIn() && resource.data.user_id == request.auth.uid; }
-
-    // ===============================================================
-    // Search History
-    // ===============================================================
     match /search_history/{historyId} {
-      allow read, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow read, delete: if isSignedIn() && existing().get('userId', '') == request.auth.uid;
       allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+    }
+
+    // Calls (WebRTC)
+    match /calls/{callId} {
+      allow read, update, create, delete: if isSignedIn() && (
+        incoming().get('caller_id', '') == request.auth.uid ||
+        incoming().get('receiver_id', '') == request.auth.uid ||
+        (existing() != null && (
+          existing().get('caller_id', '') == request.auth.uid ||
+          existing().get('receiver_id', '') == request.auth.uid
+        ))
+      );
+
+      match /callerCandidates/{id} { allow read, write: if isSignedIn(); }
+      match /receiverCandidates/{id} { allow read, write: if isSignedIn(); }
+    }
+
+    match /user_settings/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /payment_methods/{id} {
+      allow read, write: if isSignedIn() && (
+        (incoming() != null && incoming().get('user_id', '') == request.auth.uid) ||
+        (existing() != null && existing().get('user_id', '') == request.auth.uid)
+      );
     }
   }
 }

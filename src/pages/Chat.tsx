@@ -3,8 +3,9 @@ import { Search, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { collection, query, where, onSnapshot, orderBy, getDoc, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, getDoc, doc, limit } from 'firebase/firestore';
 import { formatRelativeTime } from '../lib/dateUtils';
+import { Pin } from 'lucide-react';
 
 const filterChips = ['Todas', 'Não Lidas'];
 
@@ -32,10 +33,23 @@ export default function ChatPage() {
       const unsubscribe = onSnapshot(q, async (snapshot) => {
         const chatsPromises = snapshot.docs.map(async (chatDoc) => {
           const data = chatDoc.data();
+          
+          // Skip chats deleted for current user
+          if (data[`deleted_for_${uid}`]) return null;
+
           const otherUserId = data.participants.find((p: string) => p !== uid);
           
           let realName = data[`userName_${otherUserId}`] || 'Usuário';
           let realAvatar = data[`userAvatar_${otherUserId}`] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${otherUserId}`;
+
+          // Obter settings do chat (pinned)
+          let pinned = false;
+          try {
+            const settingSnap = await getDoc(doc(db, 'chat_settings', `${chatDoc.id}_${uid}`));
+            if (settingSnap.exists()) {
+              pinned = !!settingSnap.data().pinned;
+            }
+          } catch(e) {}
 
           // Obter dados atualizados do utilizador
           if (otherUserId) {
@@ -60,12 +74,21 @@ export default function ChatPage() {
             unread: (data[`unreadCount_${uid}`] || 0) > 0,
             unreadCount: data[`unreadCount_${uid}`] || 0,
             online: !!data.online,
-            avatar: realAvatar
+            avatar: realAvatar,
+            pinned: pinned,
+            updatedAt: data.updatedAt?.toMillis() || 0
           };
         });
         
-        const resolvedChats = await Promise.all(chatsPromises);
-        setChats(resolvedChats);
+        const resolvedChats = (await Promise.all(chatsPromises)).filter(c => c !== null);
+        
+        // Custom sort: Pinned first, then by date
+        const sortedChats = resolvedChats.sort((a: any, b: any) => {
+          if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+          return b.updatedAt - a.updatedAt;
+        });
+
+        setChats(sortedChats);
         setLoading(false);
       }, (error) => {
         handleFirestoreError(error, OperationType.GET, path);
@@ -142,7 +165,10 @@ export default function ChatPage() {
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-center">
                 <div className="flex justify-between items-baseline mb-1">
-                  <h3 className="text-[1rem] font-bold text-on-surface truncate">{chat.user}</h3>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <h3 className="text-[1rem] font-bold text-on-surface truncate">{chat.user}</h3>
+                    {chat.pinned && <Pin size={12} className="text-blue-400 rotate-45 shrink-0" fill="currentColor" />}
+                  </div>
                   <span className={`text-[0.65rem] uppercase ${chat.unread ? 'text-blue-400 font-bold' : 'text-on-surface-variant'}`}>{chat.time}</span>
                 </div>
                 <p className={`text-[0.85rem] truncate ${chat.unread ? 'text-on-surface font-medium' : 'text-on-surface-variant'}`}>

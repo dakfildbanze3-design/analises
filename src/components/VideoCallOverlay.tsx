@@ -305,12 +305,12 @@ export default function VideoCallOverlay() {
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 20, opacity: 1 }}
             exit={{ y: -100, opacity: 0 }}
-            className="absolute top-0 w-[90%] max-w-md bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex items-center justify-between shadow-2xl pointer-events-auto"
+            className="absolute top-0 w-[90%] max-w-md bg-zinc-900/90 backdrop-blur-xl rounded-2xl p-4 flex items-center justify-between shadow-2xl pointer-events-auto"
           >
             <div className="flex items-center gap-3">
               <img 
                 src={activeCall.caller_avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${activeCall.caller_id}`} 
-                className="w-12 h-12 rounded-full border border-white/20"
+                className="w-12 h-12 rounded-full font-bold"
                 alt="Caller"
               />
               <div className="flex flex-col">
@@ -350,7 +350,7 @@ export default function VideoCallOverlay() {
                 <div className="w-full h-full flex flex-col items-center justify-center gap-4">
                   <img 
                     src={isCaller ? activeCall.receiver_avatar : activeCall.caller_avatar} 
-                    className="w-32 h-32 rounded-full border-2 border-white/20 animate-pulse"
+                    className="w-32 h-32 rounded-full animate-pulse"
                     alt="Remote"
                   />
                   <span className="text-white font-bold text-xl">{isCaller ? activeCall.receiver_name : activeCall.caller_name}</span>
@@ -361,7 +361,7 @@ export default function VideoCallOverlay() {
               )}
 
               {/* Local Video (Floating Box) */}
-              <div className={`absolute top-6 right-6 w-32 h-48 bg-zinc-800 rounded-2xl overflow-hidden border border-white/20 shadow-xl transition-all ${!isCamOn ? 'opacity-50' : ''}`}>
+              <div className={`absolute top-6 right-6 w-32 h-48 bg-zinc-800 rounded-2xl overflow-hidden shadow-xl transition-all ${!isCamOn ? 'opacity-50' : ''}`}>
                 <video 
                   ref={localVideoRef} 
                   autoPlay 
@@ -378,7 +378,7 @@ export default function VideoCallOverlay() {
 
               {/* Top Details (Duration) */}
               {activeCall.status === 'accepted' && (
-                <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-black/40 backdrop-blur-md px-4 py-1 rounded-full border border-white/10">
+                <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-black/40 backdrop-blur-md px-4 py-1 rounded-full">
                   <span className="text-white font-mono text-sm">{formatDuration(callDuration)}</span>
                 </div>
               )}
