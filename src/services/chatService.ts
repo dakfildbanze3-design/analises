@@ -424,6 +424,21 @@ export const chatService = {
   },
 
   /**
+   * Desbloquear usuário
+   */
+  async unblockUser(blockedId: string) {
+    const userId = auth.currentUser?.uid;
+    if (!userId || !blockedId) return;
+
+    try {
+      await deleteDoc(doc(db, 'blocked_users', `${userId}_${blockedId}`));
+    } catch (error: any) {
+      console.error("Error unblocking:", error);
+      alert("Erro ao desbloquear utilizador: " + error.message);
+    }
+  },
+
+  /**
    * Verificar se o utilizador está bloqueado por alguém ou bloqueou alguém
    */
   async checkBlockStatus(otherUserId: string): Promise<boolean> {
@@ -439,6 +454,34 @@ export const chatService = {
     if (otherBlockSnap.exists()) return true;
 
     return false;
+  },
+
+  /**
+   * Subscrever em tempo real ao status de bloqueio
+   */
+  subscribeToBlockStatus(otherUserId: string, callback: (status: { iBlockedThem: boolean, theyBlockedMe: boolean }) => void) {
+    const userId = auth.currentUser?.uid;
+    if (!userId || !otherUserId) return () => {};
+
+    let myBlockTrue = false;
+    let otherBlockTrue = false;
+
+    const emit = () => callback({ iBlockedThem: myBlockTrue, theyBlockedMe: otherBlockTrue });
+
+    const unsub1 = onSnapshot(doc(db, 'blocked_users', `${userId}_${otherUserId}`), (docSnap) => {
+      myBlockTrue = docSnap.exists();
+      emit();
+    }, (err) => console.error(err));
+
+    const unsub2 = onSnapshot(doc(db, 'blocked_users', `${otherUserId}_${userId}`), (docSnap) => {
+      otherBlockTrue = docSnap.exists();
+      emit();
+    }, (err) => console.error(err));
+
+    return () => {
+      unsub1();
+      unsub2();
+    };
   },
 
   /**

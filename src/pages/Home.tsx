@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Plus, SlidersHorizontal, MoreVertical, Flag, Share2, Star, Link, X, Loader2, ShoppingBag, MessageSquare, Check, Video } from 'lucide-react';
+import { Plus, SlidersHorizontal, MoreVertical, Flag, Share2, Star, Link, X, Loader2, ShoppingBag, MessageSquare, Check, Video, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { db, handleFirestoreError, OperationType, auth } from '../lib/firebase';
@@ -8,7 +8,7 @@ import { formatRelativeTime } from '../lib/dateUtils';
 import { shareContent } from '../lib/shareUtils';
 import { chatService } from '../services/chatService';
 import AdBanner from '../components/AdBanner';
-import { syncGoogleProductsToFirebase, searchMoz } from '../services/searchMoz';
+import ReportModal from '../components/ReportModal';
 
 const categories = ['TUDO', 'SAPATILHAS', 'ACESSÓRIOS', 'ROUPAS', 'SERVIÇOS', 'ELETRÔNICOS'];
 
@@ -29,6 +29,7 @@ export default function Home() {
   // UI States
   const [activeOptionsId, setActiveOptionsId] = useState<string | null>(null);
   const [isSortOpen, setIsSortOpen] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
   
   // Data States
   const [products, setProducts] = useState<any[]>([]);
@@ -83,12 +84,12 @@ export default function Home() {
         constraints.push(startAfter(lastVisible));
       }
       
-      constraints.push(limit(20));
+      constraints.push(limit(40));
 
       const q = query(collection(db, 'products'), ...constraints);
       const querySnapshot = await getDocs(q);
       
-      const newProducts = querySnapshot.docs.map(doc => {
+      let newProducts = querySnapshot.docs.map(doc => {
         const data = doc.data() as any;
         return {
           id: doc.id,
@@ -103,15 +104,21 @@ export default function Home() {
         };
       });
 
+      // Randomize the incoming batch of products
+      for (let i = newProducts.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newProducts[i], newProducts[j]] = [newProducts[j], newProducts[i]];
+      }
+
       if (isLoadMore) {
         setProducts(prev => [...prev, ...newProducts]);
       } else {
         setProducts(newProducts);
       }
 
-      // Setup for next page
+      // Setup for next page (based on original order to ensure pagination works)
       setLastVisible(querySnapshot.docs[querySnapshot.docs.length - 1] || null);
-      setHasMore(querySnapshot.docs.length === 20);
+      setHasMore(querySnapshot.docs.length === 40);
 
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, 'products');
@@ -126,51 +133,6 @@ export default function Home() {
     fetchProducts(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCategory, activeSort]);
-
-  // Sync real products from Mozambique via Google Search
-  useEffect(() => {
-    // 1. Fetch from Google and show INSTANTLY
-    const loadInstantProducts = async () => {
-      const items = await searchMoz();
-      if (items && items.length > 0) {
-        const instantProducts = items.map((item: any) => ({
-          id: `google-${item.link}`,
-          name: item.title,
-          description: item.snippet,
-          price: "Consultar",
-          image: item.pagemap?.cse_image?.[0]?.src || item.pagemap?.metatags?.[0]?.['og:image'] || 'https://picsum.photos/seed/placeholder/800/800',
-          author: "Anúncio Web",
-          avatar: "https://www.google.com/favicon.ico",
-          time: 'Agora',
-          views: Math.floor(Math.random() * 500),
-          isExternal: true,
-          externalLink: item.link
-        }));
-        
-        // Add to the top of current products without waiting for Firebase
-        setProducts(prev => {
-          // Avoid duplicates if they already exist in the list
-          const existingIds = new Set(prev.map(p => p.id));
-          const filteredInstant = instantProducts.filter((p: any) => !existingIds.has(p.id));
-          return [...filteredInstant, ...prev];
-        });
-      }
-    };
-
-    loadInstantProducts();
-
-    // 2. Then sync to Firebase in the background (silent)
-    syncGoogleProductsToFirebase().then(() => {
-      console.log("Sincronização em background concluída");
-    });
-
-    // 3. Optional: Auto-refresh every 60 seconds
-    const interval = setInterval(() => {
-      loadInstantProducts();
-    }, 60000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const closeOptions = () => setActiveOptionsId(null);
 
@@ -217,29 +179,23 @@ export default function Home() {
         ))}
       </section>
 
-      {/* Shorts Header */}
+      {/* Shorts Header (Top) */}
       <div className="px-4 pt-4 pb-2 flex items-center gap-2 bg-surface">
-        <img src="/logo.png" alt="Logo" className="w-8 h-8 object-cover scale-150" />
-        <span className="text-[0.75rem] font-black text-white uppercase tracking-widest">
-          Anúncios em Shorts
+        <Play size={16} fill="currentColor" className="text-blue-500" />
+        <span className="text-[0.875rem] font-bold text-white tracking-widest lowercase">
+          anúncios em shorts
         </span>
       </div>
 
-      {/* Destaques / Featured Cards */}
+      {/* Destaques / Featured Cards (Top) */}
       {!loading && products.length > 0 && products.some(p => p.productType === 'short' || p.videoUrl) && (
         <section className="px-2 pt-2 pb-4 bg-surface">
           <div className="flex overflow-x-auto hide-scrollbar gap-3 pb-2">
             {products.filter((p: any) => p.productType === 'short' || p.videoUrl).map((product: any) => (
               <div 
                 key={`featured-${product.id}`}
-                onClick={() => {
-                  if (product.isExternal && product.externalLink) {
-                    window.open(product.externalLink, '_blank');
-                  } else {
-                    navigate(`/short/${product.id}`);
-                  }
-                }}
-                className="relative flex-shrink-0 w-[calc(50%-6px)] h-[320px] rounded-[12px] overflow-hidden cursor-pointer group bg-surface-container shadow-sm"
+                onClick={() => navigate(`/short/${product.id}`)}
+                className="relative flex-shrink-0 w-[calc(50%-6px)] h-[340px] rounded-2xl overflow-hidden cursor-pointer group bg-surface-container shadow-sm"
               >
                 {product.videoUrl ? (
                   <video 
@@ -260,16 +216,16 @@ export default function Home() {
                   />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                <div className="absolute bottom-0 left-0 w-full p-3 text-left">
-                  <h3 className="text-white text-[0.75rem] leading-tight line-clamp-2 mb-1">
+                <div className="absolute bottom-0 left-0 w-full p-4 text-left">
+                  <h3 className="text-white text-[0.875rem] leading-tight line-clamp-2 mb-1">
                     <span className="font-bold">{product.name}</span>
-                    <span className="font-medium opacity-80"> - {product.description}</span>
+                    {product.description && <span className="opacity-80 font-normal"> - {product.description}</span>}
                   </h3>
                   <p className="text-white/80 text-[0.625rem] font-bold uppercase tracking-wider">{product.views || '0'} visualizações</p>
                 </div>
                 <button 
                   onClick={(e) => { e.stopPropagation(); setActiveOptionsId(product.id); }}
-                  className="absolute top-2 right-2 bg-black/40 backdrop-blur-md text-white p-1 rounded-full active:scale-95 transition-transform"
+                  className="absolute top-3 right-3 bg-black/40 backdrop-blur-md text-white p-1.5 rounded-full active:scale-95 transition-transform z-10"
                 >
                   <MoreVertical size={18} />
                 </button>
@@ -280,7 +236,7 @@ export default function Home() {
       )}
 
       {/* Product Feed */}
-      <div className="flex flex-col gap-[3px] bg-background">
+      <div className="flex flex-col gap-[3px] bg-background mt-2">
         {loading ? (
           <div className="py-12 flex justify-center">
             <Loader2 size={32} className="animate-spin text-zinc-800" />
@@ -297,85 +253,145 @@ export default function Home() {
           </div>
         ) : (
           <>
-            {products.filter((p: any) => !p.videoUrl && p.productType !== 'short').map((product, index) => (
-              <React.Fragment key={product.id}>
-                <article 
-                  onClick={() => {
-                    if (product.isExternal && product.externalLink) {
-                      window.open(product.externalLink, '_blank');
-                    } else {
-                      navigate(`/product/${product.id}`);
-                    }
-                  }}
-                  className="bg-surface pb-4 cursor-pointer"
-                >
-                  {/* Image */}
-                  <div className="w-full aspect-square bg-surface-container-low relative">
-                    <img 
-                      src={product.image} 
-                      alt={product.name} 
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/800/800';
-                      }}
-                    />
-                    {product.discount && (
-                      <div className="absolute top-3 left-3 bg-error text-on-error text-[0.625rem] font-black px-2 py-1 rounded-[2px]">{product.discount}</div>
+            {(() => {
+              const normalProducts = products.filter((p: any) => !p.videoUrl && p.productType !== 'short');
+              const videoProducts = products.filter((p: any) => p.productType === 'short' || p.videoUrl);
+
+              return normalProducts.map((product, index) => {
+                // Show video carousel before the 3rd item, then every 8 items (3, 11, 19, 27...)
+                const showVideosHere = index === 2 || (index > 2 && (index - 2) % 8 === 0);
+                const blockNumber = index === 2 ? 0 : Math.floor((index - 2) / 8);
+                const videosSlice = videoProducts.slice(blockNumber * 5, (blockNumber + 1) * 5);
+
+                return (
+                  <React.Fragment key={product.id}>
+                    {/* Interleaved Shorts Carousel */}
+                    {showVideosHere && videosSlice.length > 0 && (
+                      <section className="px-2 pt-4 pb-6 bg-surface mt-[3px]">
+                        <div className="px-2 mb-3 flex items-center gap-2">
+                          <Play size={16} fill="currentColor" className="text-blue-500" />
+                          <span className="text-[0.875rem] font-bold text-white tracking-widest lowercase">
+                            anúncios em shorts
+                          </span>
+                        </div>
+                        <div className="flex overflow-x-auto hide-scrollbar gap-3 pb-2">
+                          {videosSlice.map((videoProduct: any) => (
+                            <div 
+                              key={`interleaved-short-${videoProduct.id}`}
+                              onClick={() => navigate(`/short/${videoProduct.id}`)}
+                              className="relative flex-shrink-0 w-[calc(50%-6px)] h-[340px] rounded-2xl overflow-hidden cursor-pointer group bg-surface-container shadow-sm"
+                            >
+                              {videoProduct.videoUrl ? (
+                                <video 
+                                  src={videoProduct.videoUrl} 
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                  muted
+                                  loop
+                                  playsInline
+                                />
+                              ) : (
+                                <img 
+                                  src={videoProduct.image || videoProduct.images?.[0]} 
+                                  alt={videoProduct.name} 
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/800/800';
+                                  }}
+                                />
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                              <div className="absolute bottom-0 left-0 w-full p-4 text-left">
+                                <h3 className="text-white text-[0.875rem] leading-tight line-clamp-2 mb-1">
+                                  <span className="font-bold">{videoProduct.name}</span>
+                                  {videoProduct.description && <span className="opacity-80 font-normal"> - {videoProduct.description}</span>}
+                                </h3>
+                                <p className="text-white/80 text-[0.625rem] font-bold uppercase tracking-wider">{videoProduct.views || '0'} visualizações</p>
+                              </div>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setActiveOptionsId(videoProduct.id); }}
+                                className="absolute top-3 right-3 bg-black/40 backdrop-blur-md text-white p-1.5 rounded-full active:scale-95 transition-transform z-10"
+                              >
+                                <MoreVertical size={18} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
                     )}
-                  </div>
-                  
-                  {/* Content */}
-                  <div className="px-4 mt-3 flex gap-3">
-                    
-                    {/* Text Content */}
-                    <div className="flex-1">
-                      {/* Name and Description (inline, max 2 lines) */}
-                      <p className="text-[0.9375rem] text-on-surface line-clamp-2 leading-snug mb-1">
-                        <span className="font-bold">{product.name}</span>
-                        <span className="text-on-surface-variant/80"> - {product.description}</span>
-                      </p>
-                      
-                      {/* Avatar, Author, and Stats in one line */}
-                      <div className="flex items-center gap-2 mt-2">
+
+                    <article 
+                      onClick={() => navigate(`/product/${product.id}`)}
+                      className={`bg-surface pb-4 cursor-pointer ${showVideosHere && videosSlice.length > 0 ? 'mt-[3px]' : ''}`}
+                    >
+                      {/* Image */}
+                      <div className="w-full aspect-square bg-surface-container-low relative">
                         <img 
-                          src={product.avatar} 
-                          alt="Avatar" 
-                          className="w-5 h-5 rounded-full object-cover"
+                          src={product.image} 
+                          alt={product.name} 
+                          className="w-full h-full object-contain"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${product.sellerId}`;
+                            (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/800/800';
                           }}
                         />
-                        <div className="flex items-center gap-1.5 text-[0.75rem] font-bold text-on-surface-variant/70 uppercase">
-                          <span>{product.author}</span>
-                          <span className="opacity-40">•</span>
-                          <span>{product.views || 0} visualizações</span>
-                          <span className="opacity-40">•</span>
-                          <span className="font-medium normal-case">{product.time}</span>
+                        {product.discount && (
+                          <div className="absolute top-3 left-3 bg-error text-on-error text-[0.625rem] font-black px-2 py-1 rounded-[2px]">{product.discount}</div>
+                        )}
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="px-4 mt-3 flex gap-3">
+                        
+                        {/* Text Content */}
+                        <div className="flex-1">
+                          {/* Name and Description (inline, max 2 lines) */}
+                          <p className="text-[0.9375rem] text-on-surface line-clamp-2 leading-snug mb-1">
+                            <span className="font-bold">{product.name}</span>
+                            <span className="text-on-surface-variant/80"> - {product.description}</span>
+                          </p>
+                          
+                          {/* Avatar, Author, and Stats in one line */}
+                          <div className="flex items-center gap-2 mt-2">
+                            <img 
+                              src={product.avatar} 
+                              alt="Avatar" 
+                              className="w-5 h-5 rounded-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${product.sellerId}`;
+                              }}
+                            />
+                            <div className="flex items-center gap-1.5 text-[0.75rem] font-bold text-on-surface-variant/70 uppercase">
+                              <span>{product.author}</span>
+                              <span className="opacity-40">•</span>
+                              <span>{product.views || 0} visualizações</span>
+                              <span className="opacity-40">•</span>
+                              <span className="font-medium normal-case">{product.time}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Options */}
+                        <div 
+                          className="flex-shrink-0 text-on-surface-variant p-1 -mr-1 cursor-pointer hover:bg-surface-container-highest rounded-full transition-colors active:scale-95 self-start"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveOptionsId(product.id);
+                          }}
+                        >
+                          <MoreVertical size={18} />
                         </div>
                       </div>
-                    </div>
+                    </article>
 
-                    {/* Options */}
-                    <div 
-                      className="flex-shrink-0 text-on-surface-variant p-1 -mr-1 cursor-pointer hover:bg-surface-container-highest rounded-full transition-colors active:scale-95 self-start"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveOptionsId(product.id);
-                      }}
-                    >
-                      <MoreVertical size={18} />
-                    </div>
-                  </div>
-                </article>
-
-                {/* Show Ad after every 4th product */}
-                {(index + 1) % 4 === 0 && (
-                  <div className="px-2 py-1">
-                    <AdBanner />
-                  </div>
-                )}
-              </React.Fragment>
-            ))}
+                    {/* Show Ad after every 4th product */}
+                    {(index + 1) % 4 === 0 && (index + 1) % 8 !== 0 && (
+                      <div className="px-2 py-1 mt-[3px] bg-background">
+                        <AdBanner />
+                      </div>
+                    )}
+                  </React.Fragment>
+                );
+              });
+            })()}
             
             {/* Infinite Scroll Loader Target */}
             <div ref={lastElementRef} className="py-8 flex justify-center bg-background">
@@ -493,10 +509,7 @@ export default function Home() {
                 <div className="h-[1px] bg-outline-variant/10 my-1 mx-4" />
 
                 <button 
-                  onClick={() => { 
-                    alert("A denúncia foi registada. Vamos analisar o conteúdo em breve."); 
-                    closeOptions(); 
-                  }}
+                  onClick={() => setReportModalOpen(true)}
                   className="flex items-center gap-3 px-5 py-3.5 hover:bg-surface-container-highest transition-colors text-left w-full active:bg-error/10"
                 >
                   <Flag size={18} className="text-error" />
@@ -507,6 +520,17 @@ export default function Home() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ReportModal
+        isOpen={reportModalOpen}
+        onClose={() => {
+          setReportModalOpen(false);
+          closeOptions();
+        }}
+        targetId={activeOptionsId || ''}
+        targetType={products.find(p => p.id === activeOptionsId)?.productType === 'short' ? 'short' : 'product'}
+        reportedUserId={products.find(p => p.id === activeOptionsId)?.sellerId}
+      />
     </motion.div>
   );
 }

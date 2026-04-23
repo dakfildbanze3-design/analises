@@ -7,6 +7,7 @@ import { chatService, Message, ChatRoom } from '../services/chatService';
 import { formatRelativeTime } from '../lib/dateUtils';
 import EmojiPicker from '../components/EmojiPicker';
 import CameraRecorder from '../components/CameraRecorder';
+import { verifyNativeAppLock } from '../lib/nativeAuth';
 import { Check, CheckCheck } from 'lucide-react';
 
 // Common Video Player for chat
@@ -201,7 +202,7 @@ export default function ChatDetail() {
   const [showMenu, setShowMenu] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
-  const [isBlocked, setIsBlocked] = useState(false);
+  const [blockStatus, setBlockStatus] = useState({ iBlockedThem: false, theyBlockedMe: false });
   const [isSearching, setIsSearching] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState<Message[]>([]);
@@ -347,13 +348,15 @@ export default function ChatDetail() {
       chatService.markAsRead(chatId).catch(console.error);
     });
 
+    let unsubBlock: (() => void) | undefined;
+
     // Subscribe to room info
     const unsubRoom = chatService.subscribeToChatRoom(chatId, (roomData) => {
       setRoom(roomData);
       
-      // Check block status whenever room data updates
-      if (roomData.otherUser?.id) {
-        chatService.checkBlockStatus(roomData.otherUser.id).then(setIsBlocked);
+      // Subscribe to real-time block status once we have the other user Id
+      if (roomData.otherUser?.id && !unsubBlock) {
+        unsubBlock = chatService.subscribeToBlockStatus(roomData.otherUser.id, setBlockStatus);
       }
     });
 
@@ -367,6 +370,7 @@ export default function ChatDetail() {
       unsubMessages();
       unsubRoom();
       unsubSettings();
+      if (unsubBlock) unsubBlock();
     };
   }, [chatId]);
 
@@ -460,10 +464,23 @@ export default function ChatDetail() {
     setShowMenu(false);
   };
 
-  const handleBlock = async () => {
+  const handleBlockToggle = async () => {
     if (!room?.otherUser?.id) return;
-    await chatService.blockUser(room.otherUser.id);
-    setIsBlocked(true);
+    
+    // Passkey/Native Auth validation
+    const verified = await verifyNativeAppLock();
+    if (!verified) {
+       setShowBlockModal(false);
+       setShowMenu(false);
+       return;
+    }
+
+    if (blockStatus.iBlockedThem) {
+      await chatService.unblockUser(room.otherUser.id);
+    } else {
+      await chatService.blockUser(room.otherUser.id);
+    }
+    
     setShowBlockModal(false);
     setShowMenu(false);
   };
@@ -620,16 +637,18 @@ export default function ChatDetail() {
                         <span>Pesquisar no Chat</span>
                       </button>
 
-                      <button 
-                        onClick={() => {
-                          setShowBlockModal(true);
-                          setShowMenu(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-[0.875rem] text-white font-bold hover:bg-white/5 transition-colors"
-                      >
-                        <UserX size={18} className="text-white" />
-                        <span>{isBlocked ? 'Usuário Bloqueado' : 'Bloquear Usuário'}</span>
-                      </button>
+                      {!blockStatus.theyBlockedMe && (
+                        <button 
+                          onClick={() => {
+                            setShowBlockModal(true);
+                            setShowMenu(false);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-[0.875rem] text-white font-bold hover:bg-white/5 transition-colors"
+                        >
+                          <UserX size={18} className="text-white" />
+                          <span>{blockStatus.iBlockedThem ? 'Desbloquear Usuário' : 'Bloquear Usuário'}</span>
+                        </button>
+                      )}
 
                       <button 
                         onClick={() => {
@@ -884,13 +903,13 @@ export default function ChatDetail() {
           )}
         </AnimatePresence>
 
-        {isBlocked ? (
+        {blockStatus.iBlockedThem || blockStatus.theyBlockedMe ? (
           <div className="bg-red-500/10 rounded-2xl p-4 text-center">
             <p className="text-red-500 text-sm font-medium uppercase tracking-wider">
-              {room?.otherUser?.displayName} está bloqueado
+              {blockStatus.theyBlockedMe ? "Chat Indisponível" : `${room?.otherUser?.displayName} está bloqueado por si`}
             </p>
             <p className="text-[0.7rem] text-zinc-500 mt-1 uppercase tracking-widest">
-              Não podes enviar nem receber mensagens
+              Não é possível enviar nem receber mensagens
             </p>
           </div>
         ) : (
@@ -1059,12 +1078,16 @@ export default function ChatDetail() {
             >
               <div className="flex items-center gap-3 mb-4 text-white font-bold">
                 <UserX size={24} className="text-white" />
-                <h3 className="text-lg font-black uppercase tracking-tight text-white">Bloquear</h3>
+                <h3 className="text-lg font-black uppercase tracking-tight text-white">{blockStatus.iBlockedThem ? 'Desbloquear' : 'Bloquear'}</h3>
               </div>
-              <p className="text-white font-bold text-[0.875rem] mb-6">Desejas bloquear este utilizador? Não poderás enviar mensagens.</p>
+              <p className="text-white font-bold text-[0.875rem] mb-6">
+                {blockStatus.iBlockedThem 
+                  ? 'Deseja desbloquear este utilizador e voltar a conversar?' 
+                  : 'Desejas bloquear este utilizador? Não poderás enviar mensagens. Será solicitado o PIN do telemóvel para segurança.'}
+              </p>
               <div className="flex gap-2">
                 <button onClick={() => setShowBlockModal(false)} className="flex-1 py-4 text-white font-bold uppercase tracking-widest hover:bg-white/5 rounded-xl transition-colors">Não</button>
-                <button onClick={handleBlock} className="flex-1 py-4 text-white font-bold uppercase tracking-widest hover:bg-white/5 rounded-xl transition-colors">Sim</button>
+                <button onClick={handleBlockToggle} className="flex-1 py-4 text-white font-bold uppercase tracking-widest hover:bg-white/5 rounded-xl transition-colors">Sim</button>
               </div>
             </motion.div>
           </div>

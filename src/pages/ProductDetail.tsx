@@ -10,6 +10,7 @@ import { shareContent } from '../lib/shareUtils';
 import { notificationService } from '../services/notificationService';
 import { chatService } from '../services/chatService';
 import AdBanner from '../components/AdBanner';
+import ReportModal from '../components/ReportModal';
 import { useRef } from 'react';
 
 type CommentType = {
@@ -36,6 +37,7 @@ export default function ProductDetail() {
   const [likeLoading, setLikeLoading] = useState(false);
   const [isDescExpanded, setIsDescExpanded] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
   const [comments, setComments] = useState<CommentType[]>([]);
   const [commentText, setCommentText] = useState('');
   const [commentLoading, setCommentLoading] = useState(false);
@@ -443,35 +445,36 @@ export default function ProductDetail() {
               <Share2 size={24} />
             </button>
             
-            {isOwner && (
-              <div className="relative">
-                <button 
-                  onClick={() => setShowOptionsMenu(!showOptionsMenu)}
-                  className="w-10 h-10 flex items-center justify-center bg-black/30 backdrop-blur-md rounded-full text-white active:scale-95 transition-transform"
-                >
-                  <MoreVertical size={24} />
-                </button>
+            <div className="relative">
+              <button 
+                onClick={() => setShowOptionsMenu(!showOptionsMenu)}
+                className="w-10 h-10 flex items-center justify-center bg-black/30 backdrop-blur-md rounded-full text-white active:scale-95 transition-transform"
+              >
+                <MoreVertical size={24} />
+              </button>
 
-                <AnimatePresence>
-                  {showOptionsMenu && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                      className="absolute top-12 right-0 w-48 bg-zinc-900 rounded-[8px] shadow-2xl flex flex-col overflow-hidden border border-zinc-800 z-[60]"
+              <AnimatePresence>
+                {showOptionsMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                    className="absolute top-12 right-0 w-48 bg-zinc-900 rounded-[8px] shadow-2xl flex flex-col overflow-hidden border border-zinc-800 z-[60]"
+                  >
+                    <button 
+                      onClick={() => {
+                        const url = product.images?.[0];
+                        if (url) window.open(url, '_blank');
+                        setShowOptionsMenu(false);
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 transition-colors text-left"
                     >
-                      <button 
-                        onClick={() => {
-                          const url = product.images?.[0];
-                          if (url) window.open(url, '_blank');
-                          setShowOptionsMenu(false);
-                        }}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 transition-colors text-left"
-                      >
-                        <Download size={18} className="text-white" />
-                        <span className="text-[0.875rem] font-medium text-white">Salvar na galeria</span>
-                      </button>
-                      <div className="h-[1px] bg-zinc-800 mx-2" />
+                      <Download size={18} className="text-white" />
+                      <span className="text-[0.875rem] font-medium text-white">Salvar na galeria</span>
+                    </button>
+                    <div className="h-[1px] bg-zinc-800 mx-2" />
+                    
+                    {isOwner ? (
                       <button 
                         onClick={handleDeleteProduct}
                         className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 transition-colors text-left"
@@ -479,11 +482,22 @@ export default function ProductDetail() {
                         <Trash2 size={18} className="text-error" />
                         <span className="text-[0.875rem] font-medium text-error">Excluir</span>
                       </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
+                    ) : (
+                      <button 
+                        onClick={() => {
+                          setReportModalOpen(true);
+                          setShowOptionsMenu(false);
+                        }}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 transition-colors text-left"
+                      >
+                        <Flag size={18} className="text-error" />
+                        <span className="text-[0.875rem] font-medium text-error">Denunciar</span>
+                      </button>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </header>
 
@@ -526,9 +540,6 @@ export default function ProductDetail() {
                  <span className="text-[0.75rem] font-bold text-on-surface-variant mt-1 block uppercase tracking-widest">Ler mais...</span>
               )}
             </div>
-
-            {/* Ad Banner between Description and Seller Info */}
-            <AdBanner className="my-6" />
 
             {seller && (
                <div className="flex flex-col gap-4">
@@ -609,12 +620,6 @@ export default function ProductDetail() {
 
                  {auth.currentUser?.uid !== product.sellerId && (
                    <div className="flex gap-2 mt-2">
-                     <button 
-                       onClick={handleMessageClick}
-                       className="flex-1 bg-zinc-600 h-[38px] flex items-center justify-center text-[0.75rem] font-black tracking-widest rounded-[3px] text-white active:scale-95 transition-transform shadow-md uppercase"
-                     >
-                       MENSAGEM
-                     </button>
                      <button 
                        onClick={() => window.open(`https://wa.me/${product.sellerPhone?.replace(/\D/g, '')}`, '_blank')}
                        className="flex-1 bg-blue-900 h-[38px] flex items-center justify-center text-[0.75rem] font-black tracking-widest rounded-[3px] text-white active:scale-95 transition-transform shadow-md uppercase"
@@ -803,6 +808,14 @@ export default function ProductDetail() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ReportModal
+        isOpen={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        targetId={product?.id || ''}
+        targetType={product?.productType === 'short' ? 'short' : 'product'}
+        reportedUserId={product?.sellerId}
+      />
     </div>
   );
 }

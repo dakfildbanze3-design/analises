@@ -10,6 +10,7 @@ import { formatRelativeTime } from '../lib/dateUtils';
 import { shareContent } from '../lib/shareUtils';
 import { chatService } from '../services/chatService';
 import AdBanner from '../components/AdBanner';
+import ReportModal from '../components/ReportModal';
 
 type CommentType = {
   id: string;
@@ -36,6 +37,7 @@ export default function ShortPlayer() {
   const [isTextExpanded, setIsTextExpanded] = useState(false);
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
   
   // Comments logic
   const [comments, setComments] = useState<CommentType[]>([]);
@@ -407,46 +409,64 @@ export default function ShortPlayer() {
           <ChevronDown size={28} />
         </button>
 
-        {isOwner && (
-          <div className="absolute top-3 right-3 z-50">
-            <button 
-              onClick={() => setShowOptionsMenu(!showOptionsMenu)}
-              className="p-1.5 bg-black/40 hover:bg-black/60 backdrop-blur-sm rounded-full text-white transition-colors shadow-lg"
-            >
-              <MoreVertical size={24} />
-            </button>
+        {/* Options Menu */}
+        <div className="absolute top-3 right-3 z-50">
+          <button 
+            onClick={() => setShowOptionsMenu(!showOptionsMenu)}
+            className="p-1.5 bg-black/40 hover:bg-black/60 backdrop-blur-sm rounded-full text-white transition-colors shadow-lg"
+          >
+            <MoreVertical size={24} />
+          </button>
 
-            <AnimatePresence>
-              {showOptionsMenu && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                  className="absolute top-12 right-0 w-48 bg-zinc-900 rounded-[8px] shadow-2xl flex flex-col overflow-hidden z-[60]"
+          <AnimatePresence>
+            {showOptionsMenu && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                className="absolute top-12 right-0 w-48 bg-zinc-900 rounded-[8px] shadow-2xl flex flex-col overflow-hidden z-[60]"
+              >
+                {/* Available for everyone */}
+                <button 
+                  onClick={() => {
+                    const url = product.videoUrl || product.images?.[0];
+                    if (url) window.open(url, '_blank');
+                    setShowOptionsMenu(false);
+                  }}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left"
                 >
-                  <button 
-                    onClick={() => {
-                      const url = product.videoUrl || product.images?.[0];
-                      if (url) window.open(url, '_blank');
-                      setShowOptionsMenu(false);
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left"
-                  >
-                    <Download size={18} className="text-white" />
-                    <span className="text-[0.875rem] font-bold text-white">Salvar na galeria</span>
-                  </button>
-                  <button 
-                    onClick={handleDeleteProduct}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left"
-                  >
-                    <Trash2 size={18} className="text-white" />
-                    <span className="text-[0.875rem] font-bold text-white">Excluir</span>
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
+                  <Download size={18} className="text-white" />
+                  <span className="text-[0.875rem] font-bold text-white">Salvar mídia</span>
+                </button>
+
+                {isOwner ? (
+                  <>
+                    <button 
+                      onClick={handleDeleteProduct}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left"
+                    >
+                      <Trash2 size={18} className="text-white" />
+                      <span className="text-[0.875rem] font-bold text-white">Excluir</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button 
+                      onClick={() => {
+                        setReportModalOpen(true);
+                        setShowOptionsMenu(false);
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left"
+                    >
+                      <Flag size={18} className="text-error" />
+                      <span className="text-[0.875rem] font-bold text-error">Denunciar</span>
+                    </button>
+                  </>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       <div className="h-[1px] w-full bg-outline-variant/10" />
@@ -600,7 +620,7 @@ export default function ShortPlayer() {
             </div>
          </div>
 
-         {/* Extra Actions for the Product (WhatsApp / Chat) - Hidden if own post */}
+         {/* Extra Actions for the Product (WhatsApp) - Hidden if own post */}
          {auth.currentUser?.uid !== product?.sellerId && (
            <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/5">
             <button 
@@ -616,12 +636,6 @@ export default function ShortPlayer() {
                 className="flex items-center gap-1.5 px-4 h-9 bg-green-600 rounded-[4px] hover:bg-green-700 transition-colors flex-1 justify-center shadow-sm text-white font-bold text-[0.8125rem]"
             >
                WhatsApp
-            </button>
-            <button 
-                onClick={handleMessageClick}
-                className="flex items-center gap-1.5 px-4 h-9 bg-zinc-600 rounded-[4px] hover:bg-zinc-700 transition-colors flex-1 justify-center shadow-sm text-white font-bold text-[0.8125rem]"
-            >
-               Mensagem
             </button>
          </div>
          )}
@@ -830,6 +844,14 @@ export default function ShortPlayer() {
           </motion.div>
       )}
       </AnimatePresence>
+
+      <ReportModal
+        isOpen={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        targetId={product.id}
+        targetType={product.productType === 'short' ? 'short' : 'product'}
+        reportedUserId={product.sellerId}
+      />
     </div>
   );
 }

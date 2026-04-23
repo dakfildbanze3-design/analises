@@ -12,8 +12,8 @@ interface AdBannerProps {
  * AdBanner Component for Google AdSense / AdMob for Web
  */
 export default function AdBanner({ 
-  adSlot = "6870833164", 
-  adClient = "ca-pub-7509073601077347", 
+  adSlot = import.meta.env.VITE_ADSENSE_SLOT_FEED || "6870833164", 
+  adClient = import.meta.env.VITE_ADSENSE_CLIENT_ID || "ca-pub-7509073601077347", 
   format = "auto",
   className = "",
   useImageBackground = false

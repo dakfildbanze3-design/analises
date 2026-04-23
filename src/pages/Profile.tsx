@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Verified, Grid, PlusCircle, Loader2, LogOut, Video, ShoppingBag } from 'lucide-react';
+import { Verified, Grid, PlusCircle, Loader2, LogOut, Video, ShoppingBag, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 
 export default function ProfilePage() {
@@ -73,6 +73,19 @@ export default function ProfilePage() {
       navigate('/login');
     } catch (error) {
       console.error("Erro ao sair:", error);
+    }
+  };
+
+  const handleDelete = async (e: React.MouseEvent, productId: string) => {
+    e.stopPropagation();
+    if (!window.confirm("Tens a certeza que queres eliminar este post?")) return;
+
+    try {
+      await deleteDoc(doc(db, 'products', productId));
+      setMyProducts(prev => prev.filter(p => p.id !== productId));
+    } catch (error) {
+      console.error("Erro a eliminar post:", error);
+      alert("Houve um erro ao eliminar. Tenta novamente.");
     }
   };
 
@@ -194,6 +207,12 @@ export default function ProfilePage() {
                   <div className="text-[0.625rem] uppercase text-white font-bold mb-1">{product.price} MT</div>
                   <div className="text-[0.75rem] font-medium text-white truncate">{product.name}</div>
                 </div>
+                <button
+                  onClick={(e) => handleDelete(e, product.id)}
+                  className="absolute top-2 right-2 p-1.5 bg-black/40 hover:bg-black/60 rounded-full text-white backdrop-blur-sm transition-colors z-10"
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
             ))}
             {/* Add New Product Card */}
@@ -231,6 +250,12 @@ export default function ProfilePage() {
                   </div>
                   <div className="text-[0.75rem] font-medium text-white truncate">{product.name}</div>
                 </div>
+                <button
+                  onClick={(e) => handleDelete(e, product.id)}
+                  className="absolute top-2 right-2 p-1.5 bg-black/40 hover:bg-black/60 rounded-full text-white backdrop-blur-sm transition-colors z-10"
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
             ))}
             {videoProducts.length === 0 && (
