@@ -417,6 +417,8 @@ export default function Home() {
                                 <img 
                                   src={v.image || v.images?.[0]} 
                                   alt={v.name} 
+                                  loading="lazy"
+                                  decoding="async"
                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                                 />
                               );
@@ -452,6 +454,8 @@ export default function Home() {
                             <img 
                               src={v.avatar} 
                               alt="Avatar" 
+                              loading="lazy"
+                              decoding="async"
                               className="w-8 h-8 rounded-full border border-outline-variant/10"
                               onError={(e) => { (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${v.sellerId}`; }}
                             />
@@ -478,6 +482,8 @@ export default function Home() {
                         <img 
                           src={product.image} 
                           alt={product.name} 
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-full object-contain"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/800/800';
@@ -504,6 +510,8 @@ export default function Home() {
                             <img 
                               src={product.avatar} 
                               alt="Avatar" 
+                              loading="lazy"
+                              decoding="async"
                               className="w-5 h-5 rounded-full object-cover"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${product.sellerId}`;

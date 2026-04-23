@@ -620,6 +620,8 @@ export default function ShortPlayer() {
                    <img 
                      src={comments[0].avatar} 
                      alt="Avatar Comentário" 
+                     loading="lazy"
+                     decoding="async"
                      className="w-6 h-6 rounded-full bg-zinc-800 flex-shrink-0 object-cover border border-white/10"
                      referrerPolicy="no-referrer"
                    />

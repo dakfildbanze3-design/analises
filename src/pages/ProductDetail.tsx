@@ -720,6 +720,8 @@ export default function ProductDetail() {
                           <img 
                             src={item.image || item.images?.[0] || 'https://picsum.photos/seed/placeholder/800/800'} 
                             alt={item.name}
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/800/800';

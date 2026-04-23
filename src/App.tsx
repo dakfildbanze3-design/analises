@@ -1,29 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import TopBar from './components/TopBar';
 import BottomNav from './components/BottomNav';
-import Home from './pages/Home';
-import Chat from './pages/Chat';
-import Alerts from './pages/Alerts';
-import Profile from './pages/Profile';
-import Settings from './pages/Settings';
-import ProductDetail from './pages/ProductDetail';
-import PublicProfile from './pages/PublicProfile';
-import Sell from './pages/Sell';
-import SellDetails from './pages/SellDetails';
-import SellCamera from './pages/SellCamera';
-import ShortPlayer from './pages/ShortPlayer';
-import Search from './pages/Search';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ProfileSetup from './pages/ProfileSetup';
-import ChatDetail from './pages/ChatDetail';
 import VideoCallOverlay from './components/VideoCallOverlay';
 import SplashScreen from './components/SplashScreen';
 import PwaInstallPrompt from './components/PwaInstallPrompt';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './lib/firebase';
 import { notificationService } from './services/notificationService';
+
+// Lazy loading components for faster initial load
+const Home = lazy(() => import('./pages/Home'));
+const Chat = lazy(() => import('./pages/Chat'));
+const Alerts = lazy(() => import('./pages/Alerts'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Settings = lazy(() => import('./pages/Settings'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const PublicProfile = lazy(() => import('./pages/PublicProfile'));
+const Sell = lazy(() => import('./pages/Sell'));
+const SellDetails = lazy(() => import('./pages/SellDetails'));
+const SellCamera = lazy(() => import('./pages/SellCamera'));
+const ShortPlayer = lazy(() => import('./pages/ShortPlayer'));
+const Search = lazy(() => import('./pages/Search'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const ProfileSetup = lazy(() => import('./pages/ProfileSetup'));
+const ChatDetail = lazy(() => import('./pages/ChatDetail'));
+
+const PageLoader = () => (
+  <div className="flex-1 flex items-center justify-center py-20 bg-background text-primary">
+    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+  </div>
+);
 
 function AppContent() {
   const location = useLocation();
@@ -126,24 +134,27 @@ function AppContent() {
       )}
       
       <main className={`max-w-md mx-auto relative ${isAuthPage ? '' : ''}`}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/chat/:chatId" element={<ChatDetail />} />
-          <Route path="/alerts" element={<Alerts />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/short/:id" element={<ShortPlayer />} />
-          <Route path="/user/:id" element={<PublicProfile />} />
-          <Route path="/sell" element={<Sell />} />
-          <Route path="/sell-details" element={<SellDetails />} />
-          <Route path="/sell-camera" element={<SellCamera />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/profile-setup" element={<ProfileSetup />} />
-        </Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/chat/:chatId" element={<ChatDetail />} />
+            <Route path="/alerts" element={<Alerts />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/short/:id" element={<ShortPlayer />} />
+            <Route path="/user/:id" element={<PublicProfile />} />
+            <Route path="/video/:id" element={<ShortPlayer />} />
+            <Route path="/sell" element={<Sell />} />
+            <Route path="/sell-details" element={<SellDetails />} />
+            <Route path="/sell-camera" element={<SellCamera />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/profile-setup" element={<ProfileSetup />} />
+          </Routes>
+        </Suspense>
       </main>
 
       <VideoCallOverlay />
