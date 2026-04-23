@@ -24,8 +24,8 @@ export default function SplashScreen({ onFinish, isReady }: SplashScreenProps) {
     if (minTimeExpired && isReady) {
       const exitTimer = setTimeout(() => {
         setIsVisible(false);
-        // Wait for exit animation to finish before calling onFinish
-        setTimeout(onFinish, 600);
+        // Wait for exit animation to start, then signal finish immediately to avoid blank screen
+        onFinish();
       }, 500);
       return () => clearTimeout(exitTimer);
     }

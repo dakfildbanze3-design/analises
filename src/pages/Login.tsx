@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowLeft } from 'lucide-react';
 import { auth, googleProvider } from '../lib/firebase';
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 
@@ -44,10 +43,6 @@ export default function Login() {
       animate={{ opacity: 1, x: 0 }}
       className="min-h-screen bg-background px-6 py-8 flex flex-col"
     >
-      <button onClick={() => navigate(-1)} className="mb-8 text-on-surface-variant hover:text-primary transition-colors">
-        <ArrowLeft size={24} strokeWidth={2.5} />
-      </button>
-
       <div className="flex-1 flex flex-col justify-center items-center text-center">
         <img 
           src="/android-chrome-512x512.png" 

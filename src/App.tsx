@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy, Component, ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import TopBar from './components/TopBar';
 import BottomNav from './components/BottomNav';
@@ -32,6 +32,54 @@ const PageLoader = () => (
     <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
   </div>
 );
+
+// Error Boundary Component
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: any;
+}
+
+class ErrorBoundary extends (Component as any) {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: any): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("Critical Render Error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-[#131313] text-white p-8 flex flex-col items-center justify-center text-center">
+          <h1 className="text-xl font-bold mb-4">Ups! Algo correu mal.</h1>
+          <p className="text-sm opacity-60 mb-6 max-w-xs">
+            A aplicação encontrou um erro inesperado. Tenta recarregar a página.
+          </p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-blue-900 px-6 py-3 rounded-full font-bold text-sm uppercase tracking-widest"
+          >
+            Recarregar
+          </button>
+          <div className="mt-8 p-4 bg-black/20 rounded text-[10px] text-left overflow-auto max-w-full">
+            <code>{this.state.error?.toString()}</code>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function AppContent() {
   const location = useLocation();
@@ -167,8 +215,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        <AppContent />
+      </Router>
+    </ErrorBoundary>
   );
 }

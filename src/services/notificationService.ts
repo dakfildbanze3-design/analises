@@ -162,6 +162,12 @@ export const notificationService = {
     if (!messaging) return;
 
     try {
+      // Safety check for environments where Notification API is missing (e.g. some mobile browsers or non-secure contexts)
+      if (typeof window === 'undefined' || !('Notification' in window)) {
+        console.warn('Notification API not supported in this browser.');
+        return;
+      }
+
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
         const token = await getToken(messaging, {
