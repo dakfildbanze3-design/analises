@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Loader2, ThumbsUp, ThumbsDown, MessageSquare, Share2, Bookmark, ShoppingBag, X, Send, MapPin, Phone, Tag, MoreVertical, Download, Trash2 } from 'lucide-react';
+import { ChevronDown, Loader2, ThumbsUp, ThumbsDown, MessageSquare, Share2, Bookmark, ShoppingBag, X, Send, MapPin, Phone, Tag, MoreVertical, Download, Trash2, Flag } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { db, handleFirestoreError, OperationType, auth } from '../lib/firebase';
@@ -388,13 +388,28 @@ export default function ShortPlayer() {
       {/* Video Box (16:9 Standard Player) */}
       <div className="w-full aspect-video bg-black sticky top-0 z-40 relative group">
         {product.videoUrl ? (
-            <video 
-              src={product.videoUrl} 
-              className="w-full h-full object-contain"
-              controls
-              autoPlay
-              playsInline
-            />
+           (() => {
+              const ytMatch = product.videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+              if (ytMatch && ytMatch[1]) {
+                return (
+                   <iframe
+                     src={`https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&playsinline=1`}
+                     className="w-full h-full object-contain border-0 pointer-events-auto"
+                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                     allowFullScreen
+                   />
+                );
+              }
+              return (
+                 <video 
+                   src={product.videoUrl} 
+                   className="w-full h-full object-contain"
+                   controls
+                   autoPlay
+                   playsInline
+                 />
+              );
+           })()
         ) : (
             <div className="w-full h-full flex items-center justify-center">
                 <img src={product.image || product.images?.[0]} className="w-full h-full object-cover opacity-80" />
@@ -653,19 +668,33 @@ export default function ShortPlayer() {
                 >
                   {/* Video Content FIRST */}
                   <div 
-                     className="relative w-full aspect-video bg-black cursor-pointer"
+                     className="relative w-full aspect-video bg-black cursor-pointer rounded-[16px] overflow-hidden shadow-md mx-auto"
                      onClick={() => {
                         navigate(`/short/${item.id}`);
                         window.scrollTo(0,0);
                      }}
                   >
-                     <video 
-                        src={item.videoUrl} 
-                        className="w-full h-full object-cover"
-                        muted
-                        loop
-                        playsInline
-                     />
+                     {(() => {
+                        const ytMatch = item.videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+                        if (ytMatch && ytMatch[1]) {
+                           return (
+                             <img 
+                               src={`https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`} 
+                               className="w-full h-full object-cover" 
+                               alt={item.name} 
+                             />
+                           );
+                        }
+                        return (
+                           <video 
+                              src={item.videoUrl} 
+                              className="w-full h-full object-cover"
+                              muted
+                              loop
+                              playsInline
+                           />
+                        );
+                     })()}
                      {/* Overlay Stats/Video Tag */}
                      <div className="absolute top-2 right-2 bg-black/60 text-white text-[0.625rem] font-bold px-2 py-1 rounded-[4px] tracking-wider uppercase">
                         VÍDEO

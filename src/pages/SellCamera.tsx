@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, RotateCcw, Image as ImageIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../lib/firebase';
+import MediaEditor from '../components/MediaEditor';
 
 export default function SellCamera() {
   const navigate = useNavigate();
@@ -10,11 +11,12 @@ export default function SellCamera() {
   const [isRecording, setIsRecording] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
-  const [activeTab, setActiveTab] = useState('Camera');
+  const [activeTab, setActiveTab] = useState('Vídeo');
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const videoInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  const [editingMedia, setEditingMedia] = useState<{type: 'video' | 'image', url: string, allUrls?: string[]} | null>(null);
 
   useEffect(() => {
     async function setupCamera() {
@@ -69,8 +71,7 @@ export default function SellCamera() {
     recorder.onstop = () => {
       const blob = new Blob(localChunks, { type: 'video/webm' });
       const url = URL.createObjectURL(blob);
-      // Navigate immediately to editing as requested
-      navigate('/sell-details', { state: { capturedVideoUrl: url } });
+      setEditingMedia({ type: 'video', url });
     };
 
     recorder.start();
@@ -86,8 +87,7 @@ export default function SellCamera() {
     if (ctx) {
       ctx.drawImage(videoRef.current, 0, 0);
       const dataUrl = canvas.toDataURL('image/jpeg');
-      // Navigate immediately as requested
-      navigate('/sell-details', { state: { capturedImages: [dataUrl] } });
+      setEditingMedia({ type: 'image', url: dataUrl });
     }
   };
 
@@ -109,6 +109,28 @@ export default function SellCamera() {
     );
   }
 
+  if (editingMedia) {
+    return (
+      <MediaEditor
+        media={editingMedia}
+        onCancel={() => setEditingMedia(null)}
+        onComplete={(urls, thumbUrl) => {
+          if (editingMedia.type === 'video') {
+             // Pass the video and optionally the thumbnail
+             navigate('/sell-details', { 
+               state: { 
+                 capturedVideoUrl: urls[0],
+                 capturedImages: thumbUrl ? [thumbUrl] : []
+               } 
+             });
+          } else {
+             navigate('/sell-details', { state: { capturedImages: urls } });
+          }
+        }}
+      />
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black z-[100] flex flex-col overflow-hidden">
       {/* Hidden Inputs */}
@@ -121,7 +143,7 @@ export default function SellCamera() {
             const file = e.target.files?.[0];
             if (!file || !auth.currentUser) return;
             const url = URL.createObjectURL(file);
-            navigate('/sell-details', { state: { capturedVideoUrl: url } });
+            setEditingMedia({ type: 'video', url });
           }}
       />
       <input 
@@ -134,7 +156,7 @@ export default function SellCamera() {
             const files = e.target.files;
             if (!files || files.length === 0 || !auth.currentUser) return;
             const urls = Array.from(files).map((file: File) => URL.createObjectURL(file));
-            navigate('/sell-details', { state: { capturedImages: urls } });
+            setEditingMedia({ type: 'image', url: urls[0], allUrls: urls });
           }}
       />
 
@@ -208,22 +230,22 @@ export default function SellCamera() {
         </div>
 
         {/* Bottom Tabs */}
-        <div className="flex gap-4 items-center bg-black/60 p-2 rounded-full backdrop-blur-md mb-2 border border-white/5">
-          {['Camera', 'Foto', 'Anunciar short', 'Anunciar'].map((tab) => (
+        <div className="flex gap-4 items-center bg-black/60 p-2 rounded-full backdrop-blur-md mb-2 border border-white/5 overflow-x-auto max-w-full hide-scrollbar">
+          {['Vídeo', 'Foto', 'Galeria (Short)', 'Galeria (Anúncio)'].map((tab) => (
             <button 
               key={tab}
               onClick={() => {
-                if (tab === 'Anunciar short') {
+                if (tab === 'Galeria (Short)') {
                   videoInputRef.current?.click();
                   return;
                 }
-                if (tab === 'Anunciar') {
+                if (tab === 'Galeria (Anúncio)') {
                   imageInputRef.current?.click();
                   return;
                 }
                 setActiveTab(tab);
               }}
-              className={`transition-all uppercase px-4 py-1.5 rounded-full text-[0.75rem] font-black tracking-widest ${activeTab === tab ? 'bg-white text-black' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
+              className={`transition-all uppercase px-4 py-1.5 rounded-full text-[0.75rem] font-black tracking-widest whitespace-nowrap ${activeTab === tab ? 'bg-white text-black' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
             >
               {tab}
             </button>

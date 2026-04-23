@@ -14,6 +14,7 @@ export default function ChatPage() {
   const [chats, setChats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('Todas');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const uid = auth.currentUser?.uid;
@@ -128,6 +129,8 @@ export default function ChatPage() {
             className="w-full bg-surface-container-low border-none rounded-[3px] py-2 pl-9 pr-4 text-[0.75rem] focus:ring-1 focus:ring-primary/30 transition-all placeholder:text-on-surface-variant/40" 
             placeholder="Buscar conversas..." 
             type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
           <Search size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant/60" />
         </div>
@@ -145,7 +148,9 @@ export default function ChatPage() {
             <p className="text-[0.75rem]">As suas conversas ativas aparecerão aqui.</p>
           </div>
         ) : (
-          (activeFilter === 'Não Lidas' ? chats.filter(c => c.unread) : chats).map((chat) => (
+          (activeFilter === 'Não Lidas' ? chats.filter(c => c.unread) : chats)
+          .filter(c => c.user.toLowerCase().includes(searchQuery.toLowerCase()) || (c.lastMessage && c.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())))
+          .map((chat) => (
             <div key={chat.id}>
               <div 
                 onClick={() => navigate(`/chat/${chat.id}`)}

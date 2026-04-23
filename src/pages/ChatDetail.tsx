@@ -197,6 +197,9 @@ export default function ChatDetail() {
   const [showMediaMenu, setShowMediaMenu] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [presence, setPresence] = useState<{ isOnline: boolean, lastSeen: any }>({ isOnline: false, lastSeen: null });
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Menu states
   const [showMenu, setShowMenu] = useState(false);
@@ -349,14 +352,22 @@ export default function ChatDetail() {
     });
 
     let unsubBlock: (() => void) | undefined;
+    let unsubPresence: (() => void) | undefined;
+    let unsubTyping: (() => void) | undefined;
 
     // Subscribe to room info
     const unsubRoom = chatService.subscribeToChatRoom(chatId, (roomData) => {
       setRoom(roomData);
       
-      // Subscribe to real-time block status once we have the other user Id
+      // Subscribe to real-time status once we have the other user Id
       if (roomData.otherUser?.id && !unsubBlock) {
         unsubBlock = chatService.subscribeToBlockStatus(roomData.otherUser.id, setBlockStatus);
+      }
+      if (roomData.otherUser?.id && !unsubPresence) {
+        unsubPresence = chatService.subscribeToRealtimePresence(roomData.otherUser.id, setPresence);
+      }
+      if (roomData.otherUser?.id && !unsubTyping) {
+        unsubTyping = chatService.subscribeToTyping(chatId, roomData.otherUser.id, setIsTyping);
       }
     });
 
@@ -371,6 +382,8 @@ export default function ChatDetail() {
       unsubRoom();
       unsubSettings();
       if (unsubBlock) unsubBlock();
+      if (unsubPresence) unsubPresence();
+      if (unsubTyping) unsubTyping();
     };
   }, [chatId]);
 
@@ -393,9 +406,42 @@ export default function ChatDetail() {
     }
   }, [messages]);
 
+  const getPresenceText = () => {
+    if (isTyping) return 'a escrever...';
+    if (presence.isOnline) return 'online';
+    
+    if (!presence.lastSeen) return 'offline';
+    const lastSeenDate = presence.lastSeen.toDate ? presence.lastSeen.toDate() : new Date(presence.lastSeen);
+    const now = new Date();
+    const diffSec = Math.floor((now.getTime() - lastSeenDate.getTime()) / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHours = Math.floor(diffMin / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffMin < 1) return 'visto agora mesmo';
+    if (diffMin < 60) return `visto há ${diffMin} min`;
+    if (diffHours < 24) return `visto há ${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
+    return `visto há ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}`;
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputText(e.target.value);
+    
+    if (chatId) {
+      chatService.setTyping(chatId, true);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        chatService.setTyping(chatId, false);
+      }, 3000);
+    }
+  };
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim() || !chatId) return;
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    chatService.setTyping(chatId, false);
 
     const text = inputText.trim();
     setInputText('');
@@ -540,7 +586,9 @@ export default function ChatDetail() {
               />
               <div className="flex flex-col">
                 <span className="text-[0.875rem] font-bold text-white leading-none mb-0.5">{room?.otherUser?.displayName || 'Carregando...'}</span>
-                <span className="text-[0.625rem] text-white font-bold opacity-60 uppercase tracking-widest leading-none">Online</span>
+                <span className={`text-[0.625rem] font-bold opacity-80 uppercase tracking-widest leading-none ${isTyping ? 'text-primary' : 'text-white/60'}`}>
+                  {getPresenceText()}
+                </span>
               </div>
             </div>
           )}
@@ -979,7 +1027,7 @@ export default function ChatDetail() {
                     setShowEmojiPicker(false);
                     setShowMediaMenu(false);
                   }}
-                  onChange={(e) => setInputText(e.target.value)}
+                  onChange={handleInputChange}
                   placeholder="Escreve..."
                   className="w-full bg-transparent border-none outline-none text-[1rem] text-white placeholder:text-white/40"
                 />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, MessageSquare, UserPlus, Loader2, CheckCircle2, Tag } from 'lucide-react';
+import { Heart, MessageSquare, UserPlus, Loader2, CheckCircle2, Tag, Search } from 'lucide-react';
 import { motion } from 'motion/react';
 import { auth } from '../lib/firebase';
 import { notificationService, AppNotification } from '../services/notificationService';
@@ -10,6 +10,7 @@ export default function AlertsPage() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('Todas');
+  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
   const filterChips = ['Todas', 'Não Lidas'];
@@ -75,7 +76,7 @@ export default function AlertsPage() {
         </div>
         
         {/* Filter Tabs */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 mb-1">
           {filterChips.map((chip) => (
             <button 
               key={chip}
@@ -87,6 +88,17 @@ export default function AlertsPage() {
               {chip}
             </button>
           ))}
+        </div>
+
+        <div className="relative">
+          <input 
+            className="w-full bg-white/5 border-none rounded-[3px] py-2 pl-9 pr-4 text-[0.75rem] text-white focus:ring-1 focus:ring-primary/30 transition-all placeholder:text-white/40" 
+            placeholder="Buscar notificações..." 
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <Search size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/40" />
         </div>
       </div>
 
@@ -109,7 +121,12 @@ export default function AlertsPage() {
             </div>
           </div>
         ) : (
-          (activeFilter === 'Não Lidas' ? notifications.filter(n => !n.read) : notifications).map((notif) => (
+          (activeFilter === 'Não Lidas' ? notifications.filter(n => !n.read) : notifications)
+          .filter(n => {
+            const userName = (n as any).fromUserName || 'Alguém';
+            return userName.toLowerCase().includes(searchQuery.toLowerCase()) || n.text.toLowerCase().includes(searchQuery.toLowerCase());
+          })
+          .map((notif) => (
             <div 
               key={notif.id}
               onClick={() => handleMarkAsRead(notif.id, notif.postId)}

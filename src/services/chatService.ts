@@ -187,6 +187,14 @@ export const chatService = {
       otherUserId = participants.find(p => p !== userId) || '';
     }
 
+    // Verificar bloqueio antes de enviar
+    if (otherUserId) {
+      const isBlocked = await this.checkBlockStatus(otherUserId);
+      if (isBlocked) {
+        throw new Error("Chat bloqueado. Não é possível enviar mensagens.");
+      }
+    }
+
     const messageData: any = {
       chat_id: chatId,
       sender_id: userId,
@@ -406,6 +414,58 @@ export const chatService = {
       } else {
         callback({ muted: false, pinned: false });
       }
+    });
+  },
+
+  /**
+   * Status de Escrita
+   */
+  async setTyping(chatId: string, isTyping: boolean) {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+    const chatDocRef = doc(db, 'chats', chatId);
+    try {
+      await updateDoc(chatDocRef, {
+        [`typing_${userId}`]: isTyping ? serverTimestamp() : deleteField()
+      });
+    } catch (e) {
+      console.warn("Error setting typing status", e);
+    }
+  },
+
+  /**
+   * Monitorizar estado "Online" num chat
+   */
+  subscribeToRealtimePresence(userId: string, callback: (presence: { isOnline: boolean, lastSeen: any }) => void) {
+    return onSnapshot(doc(db, 'users', userId), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        callback({
+          isOnline: !!data.isOnline,
+          lastSeen: data.lastSeen
+        });
+      }
+    });
+  },
+
+  /**
+   * Monitorizar campo typing de um user específico dentro do chat
+   */
+  subscribeToTyping(chatId: string, otherUserId: string, callback: (isTyping: boolean) => void) {
+    return onSnapshot(doc(db, 'chats', chatId), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const typingItem = data[`typing_${otherUserId}`];
+        if (typingItem) {
+          const now = Date.now();
+          const typingTime = typingItem.toMillis ? typingItem.toMillis() : now;
+          if (now - typingTime < 15000) {
+            callback(true);
+            return;
+          }
+        }
+      }
+      callback(false);
     });
   },
 

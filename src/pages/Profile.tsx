@@ -234,15 +234,29 @@ export default function ProfilePage() {
               <div 
                 key={product.id}
                 onClick={() => navigate(`/short/${product.id}`)}
-                className="bg-surface h-[280px] relative group cursor-pointer overflow-hidden"
+                className="bg-surface h-[280px] relative group cursor-pointer overflow-hidden rounded-[16px]"
               >
-                <video 
-                  className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" 
-                  src={product.videoUrl} 
-                  muted
-                  loop
-                  playsInline
-                />
+                {(() => {
+                  const ytMatch = product.videoUrl?.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+                  if (ytMatch && ytMatch[1]) {
+                    return (
+                      <img 
+                        src={`https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                        alt={product.name} 
+                      />
+                    );
+                  }
+                  return (
+                    <video 
+                      className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" 
+                      src={product.videoUrl} 
+                      muted
+                      loop
+                      playsInline
+                    />
+                  );
+                })()}
 
                 <div className="absolute bottom-0 left-0 w-full p-3 bg-gradient-to-t from-black/80 to-transparent">
                   <div className="text-[0.625rem] uppercase text-white font-bold mb-1">

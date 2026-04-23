@@ -10,7 +10,9 @@ import { chatService } from '../services/chatService';
 import AdBanner from '../components/AdBanner';
 import ReportModal from '../components/ReportModal';
 
-const categories = ['TUDO', 'SAPATILHAS', 'ACESSÓRIOS', 'ROUPAS', 'SERVIÇOS', 'ELETRÔNICOS'];
+import { PRODUCT_CATEGORIES } from '../constants';
+
+const categories = ['TUDO', ...PRODUCT_CATEGORIES.map(c => c.toUpperCase())];
 
 type SortOptionId = 'recent' | 'old' | 'cheap' | 'expensive' | 'popular' | 'discussed';
 
@@ -81,6 +83,7 @@ export default function Home() {
   }, []);
 
   const fetchProducts = async (isLoadMore = false) => {
+    // Fetch products based on category and sort order
     if (isLoadMore) {
       setLoadingMore(true);
     } else {
@@ -94,9 +97,8 @@ export default function Home() {
       // If filtering by category, note that combining 'where' with 'orderBy' on a different field 
       // WILL require a composite index in Firestore!
       if (activeCategory !== 'TUDO') {
-        // We match exactly what the user selected (Sapatilhas, etc.). We ensure case-sensitivity match.
-        // It's possible we might need activeCategory matching the actual database string.
-        constraints.push(where('category', '==', activeCategory));
+        const originalCategory = PRODUCT_CATEGORIES.find(c => c.toUpperCase() === activeCategory);
+        constraints.push(where('category', '==', originalCategory || activeCategory));
       }
 
       // Order By
@@ -218,26 +220,41 @@ export default function Home() {
               <div 
                 key={`featured-${product.id}`}
                 onClick={() => navigate(`/short/${product.id}`)}
-                className="relative flex-shrink-0 w-[calc(50%-6px)] h-[340px] rounded-2xl overflow-hidden cursor-pointer group bg-surface-container shadow-sm"
+                className="relative flex-shrink-0 w-[170px] h-[340px] rounded-[16px] overflow-hidden cursor-pointer group bg-surface-container shadow-sm"
               >
-                {product.videoUrl ? (
-                  <video 
-                    src={product.videoUrl} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    muted
-                    loop
-                    playsInline
-                  />
-                ) : (
-                  <img 
-                    src={product.image || product.images?.[0]} 
-                    alt={product.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/800/800';
-                    }}
-                  />
-                )}
+                {(() => {
+                  if (!product.videoUrl) {
+                    return (
+                      <img 
+                        src={product.image || product.images?.[0]} 
+                        alt={product.name} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/800/800';
+                        }}
+                      />
+                    );
+                  }
+                  const ytMatch = product.videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+                  if (ytMatch && ytMatch[1]) {
+                     return (
+                       <img 
+                         src={`https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`} 
+                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                         alt={product.name} 
+                       />
+                     );
+                  }
+                  return (
+                    <video 
+                      src={product.videoUrl} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      muted
+                      loop
+                      playsInline
+                    />
+                  );
+                })()}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                 <div className="absolute bottom-0 left-0 w-full p-4 text-left">
                   <h3 className="text-white text-[0.875rem] leading-tight line-clamp-2 mb-1">
@@ -300,35 +317,53 @@ export default function Home() {
                         <div className="flex overflow-x-auto hide-scrollbar gap-3 pb-2">
                           {videosSlice.map((videoProduct: any) => (
                             <div 
-                              key={`interleaved-short-${videoProduct.id}`}
+                              key={`interleaved-short-carousel-${videoProduct.id}`}
                               onClick={() => navigate(`/short/${videoProduct.id}`)}
-                              className="relative flex-shrink-0 w-[calc(50%-6px)] h-[340px] rounded-2xl overflow-hidden cursor-pointer group bg-surface-container shadow-sm"
+                              className="relative flex-shrink-0 w-[170px] h-[340px] rounded-[16px] overflow-hidden cursor-pointer group bg-surface-container shadow-sm"
                             >
-                              {videoProduct.videoUrl ? (
-                                <video 
-                                  src={videoProduct.videoUrl} 
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                  muted
-                                  loop
-                                  playsInline
-                                />
-                              ) : (
-                                <img 
-                                  src={videoProduct.image || videoProduct.images?.[0]} 
-                                  alt={videoProduct.name} 
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/800/800';
-                                  }}
-                                />
-                              )}
+                              {(() => {
+                                if (!videoProduct.videoUrl) {
+                                  return (
+                                    <img 
+                                      src={videoProduct.image || videoProduct.images?.[0]} 
+                                      alt={videoProduct.name} 
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                      onError={(e) => {
+                                        (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/800/800';
+                                      }}
+                                    />
+                                  );
+                                }
+                                const ytMatch = videoProduct.videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+                                if (ytMatch && ytMatch[1]) {
+                                   return (
+                                     <img 
+                                       src={`https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`} 
+                                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                       alt={videoProduct.name} 
+                                     />
+                                   );
+                                }
+                                return (
+                                  <video 
+                                    src={videoProduct.videoUrl} 
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                    muted
+                                    loop
+                                    playsInline
+                                  />
+                                );
+                              })()}
                               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                               <div className="absolute bottom-0 left-0 w-full p-4 text-left">
                                 <h3 className="text-white text-[0.875rem] leading-tight line-clamp-2 mb-1">
                                   <span className="font-bold">{videoProduct.name}</span>
                                   {videoProduct.description && <span className="opacity-80 font-normal"> - {videoProduct.description}</span>}
                                 </h3>
-                                <p className="text-white/80 text-[0.625rem] font-bold uppercase tracking-wider">{videoProduct.views || '0'} visualizações</p>
+                                <div className="flex items-center gap-1 text-white/80 text-[0.625rem] font-bold uppercase tracking-wider">
+                                  <Video size={10} />
+                                  <span>{videoProduct.views || '0'} visualizações</span>
+                                </div>
                               </div>
                               <button 
                                 onClick={(e) => { e.stopPropagation(); setActiveOptionsId(videoProduct.id); }}
@@ -341,6 +376,98 @@ export default function Home() {
                         </div>
                       </section>
                     )}
+
+                    {/* Full Width Vertical Video (Every 5th product) */}
+                    {(index + 1) % 5 === 0 && videoProducts[Math.floor(index / 5) % videoProducts.length] && (() => {
+                      const v = videoProducts[Math.floor(index / 5) % videoProducts.length];
+                      return (
+                        <div 
+                          key={`vertical-video-post-${v.id}-${index}`}
+                          className="px-2 py-4 bg-background mt-[3px]"
+                        >
+                          <div 
+                            onClick={() => navigate(`/short/${v.id}`)}
+                            className="relative w-full aspect-[4/5] bg-surface-container rounded-[16px] overflow-hidden cursor-pointer group shadow-md"
+                          >
+                            {/* Media Content */}
+                            {(() => {
+                              const ytMatch = v.videoUrl?.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+                              if (ytMatch && ytMatch[1]) {
+                                return (
+                                  <img 
+                                    src={`https://img.youtube.com/vi/${ytMatch[1]}/maxresdefault.jpg`} 
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                                    alt={v.name} 
+                                    onError={(e) => { (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`; }}
+                                  />
+                                );
+                              }
+                              if (v.videoUrl) {
+                                return (
+                                  <video 
+                                    src={v.videoUrl} 
+                                    className="w-full h-full object-cover"
+                                    muted
+                                    loop
+                                    playsInline
+                                  />
+                                );
+                              }
+                              return (
+                                <img 
+                                  src={v.image || v.images?.[0]} 
+                                  alt={v.name} 
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                />
+                              );
+                            })()}
+
+                            {/* Center Play Icon Overlay */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-16 h-16 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 active:scale-90 transition-transform">
+                                <Play size={32} fill="white" className="text-white ml-1" />
+                              </div>
+                            </div>
+
+                            {/* Gradient Overlay */}
+                            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/80 to-transparent"></div>
+
+                            {/* View Count (Bottom Left) */}
+                            <div className="absolute bottom-4 left-4 flex items-center gap-1.5 text-white bg-black/20 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
+                              <Play size={12} fill="white" />
+                              <span className="text-[0.75rem] font-bold uppercase tracking-wide">{v.views || '0'} visualizações</span>
+                            </div>
+
+                            {/* Options Button */}
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setActiveOptionsId(v.id); }}
+                              className="absolute top-4 right-4 bg-black/40 backdrop-blur-md text-white p-2 rounded-full active:scale-95 transition-transform z-10 border border-white/10"
+                            >
+                              <MoreVertical size={18} />
+                            </button>
+                          </div>
+                          
+                          {/* Info below video post */}
+                          <div className="px-2 mt-3 flex items-start gap-3">
+                            <img 
+                              src={v.avatar} 
+                              alt="Avatar" 
+                              className="w-8 h-8 rounded-full border border-outline-variant/10"
+                              onError={(e) => { (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${v.sellerId}`; }}
+                            />
+                            <div className="flex-1">
+                              <p className="text-[0.9375rem] text-on-surface line-clamp-1 leading-snug">
+                                <span className="font-bold">{v.name}</span>
+                                {v.description && <span className="text-on-surface-variant/80 font-normal"> - {v.description}</span>}
+                              </p>
+                              <p className="text-[0.75rem] font-bold text-on-surface-variant/50 uppercase mt-0.5 tracking-tight">
+                                {v.author} • {v.time}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     <article 
                       onClick={() => navigate(`/product/${product.id}`)}

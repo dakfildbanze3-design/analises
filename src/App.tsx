@@ -20,7 +20,9 @@ import ProfileSetup from './pages/ProfileSetup';
 import ChatDetail from './pages/ChatDetail';
 import VideoCallOverlay from './components/VideoCallOverlay';
 import SplashScreen from './components/SplashScreen';
-import { auth } from './lib/firebase';
+import PwaInstallPrompt from './components/PwaInstallPrompt';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from './lib/firebase';
 import { notificationService } from './services/notificationService';
 
 function AppContent() {
@@ -29,6 +31,33 @@ function AppContent() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showSplash, setShowSplash] = useState(true);
+
+  // Presence Tracking Hook
+  useEffect(() => {
+    if (!user?.uid) return;
+    const uid = user.uid;
+    const userRef = doc(db, 'users', uid);
+    
+    const updatePresence = (isOnline: boolean) => {
+      updateDoc(userRef, {
+        isOnline,
+        lastSeen: serverTimestamp()
+      }).catch(() => {});
+    };
+    
+    updatePresence(true);
+    
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        updatePresence(true);
+      } else {
+        updatePresence(false);
+      }
+    };
+    
+    window.addEventListener('visibilitychange', handleVisibility);
+    return () => window.removeEventListener('visibilitychange', handleVisibility);
+  }, [user]);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(
@@ -118,6 +147,7 @@ function AppContent() {
       </main>
 
       <VideoCallOverlay />
+      <PwaInstallPrompt />
 
       {!isProductDetail && !isAuthPage && !isShortPlayer && !isSellCamera && !isSellDetails && !isChat && !isChatDetail && !isSearch && <BottomNav />}
     </div>

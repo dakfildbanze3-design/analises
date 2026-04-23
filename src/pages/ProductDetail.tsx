@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Share2, ShoppingBag, Loader2, ArrowLeft, X, Send, MoreVertical, Download, Trash2 } from 'lucide-react';
+import { Heart, Share2, ShoppingBag, Loader2, ArrowLeft, X, Send, MoreVertical, Download, Trash2, Flag } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { db, handleFirestoreError, OperationType, auth } from '../lib/firebase';
-import { doc, getDoc, updateDoc, increment, arrayUnion, arrayRemove, onSnapshot, collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, increment, arrayUnion, arrayRemove, onSnapshot, collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp, deleteDoc, where } from 'firebase/firestore';
 import { checkIsFollowing, followUser, unfollowUser } from '../services/followService';
 import { formatRelativeTime } from '../lib/dateUtils';
 import { shareContent } from '../lib/shareUtils';
@@ -45,6 +45,7 @@ export default function ProductDetail() {
   const commentInputRef = useRef<HTMLInputElement>(null);
   const [selectedFullImage, setSelectedFullImage] = useState<string | null>(null);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
 
   useEffect(() => {
     if (!product) return;
@@ -173,6 +174,27 @@ export default function ProductDetail() {
       unsubscribeComments();
     };
   }, [id]);
+
+  useEffect(() => {
+    if (!product?.category) return;
+    const fetchSuggestions = async () => {
+      try {
+        const q = query(
+          collection(db, 'products'),
+          where('category', '==', product.category),
+          limit(10)
+        );
+        const snap = await getDocs(q);
+        const results = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter((p: any) => p.id !== product.id && !p.videoUrl && p.productType !== 'short');
+        setSuggestions(results);
+      } catch (err) {
+        console.warn('Erro a carregar sugestões:', err);
+      }
+    };
+    fetchSuggestions();
+  }, [product?.category, product?.id]);
 
   useEffect(() => {
     const fetchFollowStatus = async () => {
@@ -459,28 +481,33 @@ export default function ProductDetail() {
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="pb-8"
+        className="pb-8 space-y-[3px]"
       >
-        <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between p-4 pointer-events-none">
+        <section className="relative w-full h-[530px] overflow-hidden">
+          {renderImageGrid()}
+        </section>
+
+        <header className="bg-black text-white flex items-center justify-between p-3 h-12">
           <button 
             onClick={() => navigate(-1)}
-            className="w-10 h-10 flex items-center justify-center bg-black/30 backdrop-blur-md rounded-full text-white pointer-events-auto active:scale-95 transition-transform"
+            className="flex items-center justify-center text-white active:scale-95 transition-transform"
           >
             <ArrowLeft size={24} />
           </button>
           
-          <div className="flex gap-2 relative pointer-events-auto">
+          <h1 className="text-[0.875rem] font-black uppercase tracking-widest">Produto</h1>
+
+          <div className="flex gap-4 relative">
             <button 
-              onClick={() => shareContent(product.name, `Veja no Bazar: ${product.name} - ${product.price} MT`, window.location.href)}
-              className="w-10 h-10 flex items-center justify-center bg-black/30 backdrop-blur-md rounded-full text-white active:scale-95 transition-transform"
+              onClick={() => shareContent(product.name, `Veja no Bazar: ${product.name}`, window.location.href)}
+              className="text-white active:scale-95 transition-transform"
             >
-              <Share2 size={24} />
+              <Share2 size={20} />
             </button>
-            
             <div className="relative">
               <button 
                 onClick={() => setShowOptionsMenu(!showOptionsMenu)}
-                className="w-10 h-10 flex items-center justify-center bg-black/30 backdrop-blur-md rounded-full text-white active:scale-95 transition-transform"
+                className="text-white active:scale-95 transition-transform"
               >
                 <MoreVertical size={24} />
               </button>
@@ -491,7 +518,7 @@ export default function ProductDetail() {
                     initial={{ opacity: 0, scale: 0.9, y: -10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                    className="absolute top-12 right-0 w-48 bg-zinc-900 rounded-[8px] shadow-2xl flex flex-col overflow-hidden border border-zinc-800 z-[60]"
+                    className="absolute top-10 right-0 w-48 bg-zinc-900 rounded-[8px] shadow-2xl flex flex-col overflow-hidden border border-zinc-800 z-[60]"
                   >
                     <button 
                       onClick={() => {
@@ -504,8 +531,6 @@ export default function ProductDetail() {
                       <Download size={18} className="text-white" />
                       <span className="text-[0.875rem] font-medium text-white">Salvar na galeria</span>
                     </button>
-                    <div className="h-[1px] bg-zinc-800 mx-2" />
-                    
                     {isOwner ? (
                       <button 
                         onClick={handleDeleteProduct}
@@ -533,14 +558,9 @@ export default function ProductDetail() {
           </div>
         </header>
 
-        <section className="relative w-full h-[530px] overflow-hidden">
-          {renderImageGrid()}
-          <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-background to-transparent pointer-events-none"></div>
-        </section>
-
-        <section className="px-0 mt-[-20px] relative z-10">
-          <div className="bg-surface p-4">
-            <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar mb-4 pb-1">
+        <section className="px-0 relative z-10">
+          <div className="bg-surface p-4 flex flex-col gap-[3px]">
+            <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
               <div className="bg-zinc-800/50 px-2 py-1 rounded-[3px] border border-zinc-800/30 flex flex-col items-center min-w-[80px]">
                 <span className="text-[0.625rem] text-on-surface-variant/60 uppercase font-black leading-none mb-1 tracking-tight">Preço</span>
                 <span className="text-[0.875rem] font-black text-on-surface leading-none">{product.price} MT</span>
@@ -621,7 +641,7 @@ export default function ProductDetail() {
                    </div>
                  </div>
 
-                 <div className="h-[2px] bg-outline-variant/5 my-1"></div>
+                 <div className="pt-[3px]"></div>
 
                  {/* Comments Preview */}
                  <div 
@@ -662,6 +682,64 @@ export default function ProductDetail() {
                  )}
                </div>
             )}
+
+            {/* Map and Suggestions container */}
+            <div className="mt-2 flex flex-col pt-2">
+              <h2 className="text-[0.75rem] font-bold text-on-surface uppercase tracking-widest mb-3">Localização</h2>
+              <div className="w-full h-[130px] bg-zinc-800 relative z-0 mb-6 rounded-[16px] overflow-hidden shadow-md">
+                <iframe 
+                  title="Google Maps Location"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(product.location || 'Maputo')}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                  className="w-full h-full border-0"
+                  loading="lazy"
+                  allowFullScreen
+                ></iframe>
+              </div>
+
+               {suggestions.length > 0 && (
+                <div className="-mx-4 mt-8 pb-8">
+                  <div className="flex items-center justify-between px-4 mb-4">
+                    <h2 className="text-[0.875rem] font-black text-on-surface uppercase tracking-[0.2em]">Podes Gostar Também</h2>
+                    <div className="h-px flex-1 bg-outline-variant/10 ml-4"></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-[3px] bg-background">
+                    {suggestions.map((item) => (
+                      <div 
+                        key={item.id}
+                        onClick={() => {
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                          navigate(`/product/${item.id}`);
+                        }}
+                        className="w-full bg-surface-container-low flex flex-col cursor-pointer active:scale-[0.98] transition-all group"
+                      >
+                        <div className="w-full aspect-[4/5] relative overflow-hidden bg-surface-container">
+                          <img 
+                            src={item.image || item.images?.[0] || 'https://picsum.photos/seed/placeholder/800/800'} 
+                            alt={item.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/800/800';
+                            }}
+                          />
+                        </div>
+                        <div className="pt-3 px-3 pb-4">
+                           <h3 className="text-[0.75rem] leading-snug line-clamp-2 min-h-[2.5em]">
+                             <span className="font-bold text-on-surface uppercase tracking-tight">{item.name}</span>
+                             {item.description ? <span className="text-on-surface-variant/70 font-medium lowercase"> - {item.description}</span> : ''}
+                           </h3>
+                           <div className="mt-2 flex items-center justify-between">
+                             <p className="text-[0.9375rem] font-black text-blue-900">{item.price} <span className="text-[0.625rem] font-bold">MT</span></p>
+                             <div className="w-6 h-6 rounded-full bg-surface-container-highest flex items-center justify-center">
+                               <ShoppingBag size={12} className="text-on-surface-variant" />
+                             </div>
+                           </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </section>
       </motion.div>

@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { auth, db, supabase, STORAGE_BUCKETS, handleFirestoreError, OperationType } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 
+import { PRODUCT_CATEGORIES } from '../constants';
+
 export default function SellDetails() {
   const navigate = useNavigate();
   const routeLocation = useLocation();
@@ -60,7 +62,7 @@ export default function SellDetails() {
       let finalImages = [...images];
       
       // Upload captured video if any
-      if (videoUrl && videoUrl.startsWith('blob:')) {
+      if (videoUrl && (videoUrl.startsWith('blob:') || videoUrl.startsWith('data:'))) {
         const response = await fetch(videoUrl);
         const blob = await response.blob();
         const fileExt = 'webm';
@@ -87,7 +89,7 @@ export default function SellDetails() {
       // Upload captured images if any
       const uploadedImages: string[] = [];
       for (const img of finalImages) {
-        if (img.startsWith('blob:')) {
+        if (img.startsWith('blob:') || img.startsWith('data:')) {
           const response = await fetch(img);
           const blob = await response.blob();
           const fileExt = 'jpg';
@@ -319,7 +321,7 @@ export default function SellDetails() {
                     >
                         {item.key === 'category' ? (
                             <div className="flex flex-wrap gap-2 pt-2">
-                                {['Sapatilhas', 'Acessórios', 'Roupas', 'Eletrônicos', 'Serviços', 'Outros'].map(cat => (
+                                {PRODUCT_CATEGORIES.map(cat => (
                                     <button 
                                         key={cat}
                                         onClick={() => { setCategory(cat); setActiveEditKey(null); }}
@@ -378,9 +380,14 @@ export default function SellDetails() {
         <button 
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-white text-black py-4 rounded-full font-bold text-[0.9375rem] active:scale-[0.98] transition-all flex items-center justify-center shadow-2xl"
+          className="w-full bg-white text-black py-4 rounded-full font-bold text-[0.9375rem] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-[0_0_40px_rgba(255,255,255,0.2)] disabled:opacity-80"
         >
-          {isSubmitting ? <Loader2 className="animate-spin" size={24} /> : videoUrl ? 'Enviar Shorts' : 'Publicar Anúncio'}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="animate-spin" size={24} />
+              <span>A Publicar...</span>
+            </>
+          ) : videoUrl ? 'Enviar Shorts' : 'Publicar Anúncio'}
         </button>
       </div>
 
