@@ -57,6 +57,29 @@ export default function Home() {
     if (node) observer.current.observe(node);
   }, [loading, loadingMore, hasMore]);
 
+  useEffect(() => {
+    const schemaData = {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Boladas",
+      "url": "https://boladas.vercel.app/",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://boladas.vercel.app/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    };
+
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.innerHTML = JSON.stringify(schemaData);
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
+
   const fetchProducts = async (isLoadMore = false) => {
     if (isLoadMore) {
       setLoadingMore(true);

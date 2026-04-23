@@ -47,6 +47,38 @@ export default function ProductDetail() {
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
 
   useEffect(() => {
+    if (!product) return;
+
+    const schemaData = {
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": product.name,
+      "image": product.image || product.images?.[0],
+      "description": product.description || "Produto disponível no Boladas",
+      "offers": {
+        "@type": "Offer",
+        "url": window.location.href,
+        "priceCurrency": "AOA",
+        "price": product.price,
+        "availability": "https://schema.org/InStock",
+        "seller": {
+          "@type": "Person",
+          "name": seller?.displayName || "Vendedor do Boladas"
+        }
+      }
+    };
+
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.innerHTML = JSON.stringify(schemaData);
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, [product, seller]);
+
+  useEffect(() => {
     if (!id) return;
     const path = `products/${id}`;
     

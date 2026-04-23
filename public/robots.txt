@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://boladas.vercel.app/sitemap.xml
