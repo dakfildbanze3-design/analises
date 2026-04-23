@@ -487,7 +487,7 @@ export default function ProductDetail() {
           {renderImageGrid()}
         </section>
 
-        <header className="bg-black text-white flex items-center justify-between p-3 h-12">
+        <header className="bg-black/90 backdrop-blur-md text-white flex items-center justify-between p-3 h-12 sticky top-0 z-50">
           <button 
             onClick={() => navigate(-1)}
             className="flex items-center justify-center text-white active:scale-95 transition-transform"
@@ -558,26 +558,30 @@ export default function ProductDetail() {
           </div>
         </header>
 
+        {/* Sticky Label Bar */}
+        <div className="bg-surface/95 backdrop-blur-md sticky top-12 z-40 border-b border-white/5 py-2 px-4 -mt-[3px]">
+          <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
+            <div className="bg-zinc-800/50 px-2 py-1 rounded-[3px] border border-zinc-800/30 flex flex-col items-center min-w-[80px]">
+              <span className="text-[0.625rem] text-on-surface-variant/60 uppercase font-black leading-none mb-1 tracking-tight">Preço</span>
+              <span className="text-[0.875rem] font-black text-on-surface leading-none">{product.price} MT</span>
+            </div>
+            <div className="bg-surface-container-highest px-3 py-1 rounded-[3px] flex flex-col min-w-[90px]">
+              <span className="text-[0.625rem] text-on-surface-variant/60 uppercase font-black leading-none mb-1 tracking-tight">Telefone</span>
+              <span className="text-[0.75rem] font-bold text-on-surface leading-none truncate">{product.sellerPhone || 'Indisp.'}</span>
+            </div>
+            <div className="bg-surface-container-highest px-3 py-1 rounded-[3px] flex flex-col min-w-[90px]">
+              <span className="text-[0.625rem] text-on-surface-variant/60 uppercase font-black leading-none mb-1 tracking-tight">Localização</span>
+              <span className="text-[0.75rem] font-bold text-on-surface leading-none truncate">{product.location || 'Maputo'}</span>
+            </div>
+            <div className="bg-surface-container-highest px-3 py-1 rounded-[3px] flex flex-col min-w-[90px]">
+              <span className="text-[0.625rem] text-on-surface-variant/60 uppercase font-black leading-none mb-1 tracking-tight">Categoria</span>
+              <span className="text-[0.75rem] font-bold text-on-surface leading-none truncate">{product.category || 'Geral'}</span>
+            </div>
+          </div>
+        </div>
+
         <section className="px-0 relative z-10">
           <div className="bg-surface p-4 flex flex-col gap-[3px]">
-            <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
-              <div className="bg-zinc-800/50 px-2 py-1 rounded-[3px] border border-zinc-800/30 flex flex-col items-center min-w-[80px]">
-                <span className="text-[0.625rem] text-on-surface-variant/60 uppercase font-black leading-none mb-1 tracking-tight">Preço</span>
-                <span className="text-[0.875rem] font-black text-on-surface leading-none">{product.price} MT</span>
-              </div>
-              <div className="bg-surface-container-highest px-3 py-1 rounded-[3px] flex flex-col min-w-[90px]">
-                <span className="text-[0.625rem] text-on-surface-variant/60 uppercase font-black leading-none mb-1 tracking-tight">Telefone</span>
-                <span className="text-[0.75rem] font-bold text-on-surface leading-none truncate">{product.sellerPhone || 'Indisp.'}</span>
-              </div>
-              <div className="bg-surface-container-highest px-3 py-1 rounded-[3px] flex flex-col min-w-[90px]">
-                <span className="text-[0.625rem] text-on-surface-variant/60 uppercase font-black leading-none mb-1 tracking-tight">Localização</span>
-                <span className="text-[0.75rem] font-bold text-on-surface leading-none truncate">{product.location || 'Maputo'}</span>
-              </div>
-              <div className="bg-surface-container-highest px-3 py-1 rounded-[3px] flex flex-col min-w-[90px]">
-                <span className="text-[0.625rem] text-on-surface-variant/60 uppercase font-black leading-none mb-1 tracking-tight">Categoria</span>
-                <span className="text-[0.75rem] font-bold text-on-surface leading-none truncate">{product.category || 'Geral'}</span>
-              </div>
-            </div>
 
             <div 
               onClick={() => setIsDescExpanded(!isDescExpanded)}

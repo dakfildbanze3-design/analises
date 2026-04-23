@@ -486,35 +486,36 @@ export default function ShortPlayer() {
 
       <div className="h-[1px] w-full bg-outline-variant/10" />
 
+      {/* Badges Row (Price, Location, Phone, Category) - STICKY exactly below the sticky video */}
+      <div className="flex items-center gap-1.5 px-4 py-2 bg-black/95 backdrop-blur-md sticky top-[56.25vw] md:top-[252px] z-30 border-b border-white/5 overflow-x-auto hide-scrollbar shadow-lg">
+          {/* Price Badge - High Visibility */}
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-900 border border-blue-800 rounded-[3px] text-[0.8125rem] text-white font-black shadow-md whitespace-nowrap shrink-0">
+             <ShoppingBag size={14} className="opacity-80" />
+             <span>{product.price} MT</span>
+          </div>
+          
+          {product.location && (
+             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 rounded-[3px] text-[0.75rem] text-white/90 font-bold shadow-sm border border-white/5 whitespace-nowrap shrink-0">
+                <MapPin size={14} className="opacity-70" />
+                <span>{product.location}</span>
+             </div>
+          )}
+          {product.category && (
+             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800/80 rounded-[3px] text-[0.75rem] text-primary font-black shadow-sm border border-primary/20 whitespace-nowrap shrink-0">
+                <Tag size={14} className="opacity-70" />
+                <span>{product.category}</span>
+             </div>
+          )}
+          {product.sellerPhone && (
+             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 rounded-[3px] text-[0.75rem] text-white/90 font-bold shadow-sm border border-white/5 whitespace-nowrap shrink-0">
+                <Phone size={14} className="opacity-70" />
+                <span>{product.sellerPhone}</span>
+             </div>
+          )}
+      </div>
+
       {/* Info details */}
       <div className="px-4 py-2.5">
-         {/* Badges Row (Price, Location, Phone, Category) */}
-         <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
-            {/* Price Badge - High Visibility */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-900 border border-blue-800 rounded-[3px] text-[0.8125rem] text-white font-bold shadow-md">
-               <ShoppingBag size={14} className="opacity-80" />
-               <span>{product.price} MT</span>
-            </div>
-            
-            {product.location && (
-               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/15 rounded-[3px] text-[0.75rem] text-white/90 font-medium shadow-sm border border-white/5">
-                  <MapPin size={14} className="opacity-70" />
-                  <span>{product.location}</span>
-               </div>
-            )}
-            {product.sellerPhone && (
-               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/15 rounded-[3px] text-[0.75rem] text-white/90 font-medium shadow-sm border border-white/5">
-                  <Phone size={14} className="opacity-70" />
-                  <span>{product.sellerPhone}</span>
-               </div>
-            )}
-            {product.category && (
-               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/15 rounded-[3px] text-[0.75rem] text-primary font-bold shadow-sm border border-primary/20">
-                  <Tag size={14} className="opacity-70" />
-                  <span>{product.category}</span>
-               </div>
-            )}
-         </div>
 
          {/* Product Info Block: Avatar | Divider | Name - Description */}
          <div className="flex items-center mb-3">
