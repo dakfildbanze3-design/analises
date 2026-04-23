@@ -182,8 +182,8 @@ export default function Home() {
       {/* Shorts Header (Top) */}
       <div className="px-4 pt-4 pb-2 flex items-center gap-2 bg-surface">
         <Play size={16} fill="currentColor" className="text-blue-500" />
-        <span className="text-[0.875rem] font-bold text-white tracking-widest lowercase">
-          anúncios em shorts
+        <span className="text-[0.875rem] font-bold text-white tracking-widest">
+          Anúncios em Shorts
         </span>
       </div>
 
@@ -270,8 +270,8 @@ export default function Home() {
                       <section className="px-2 pt-4 pb-6 bg-surface mt-[3px]">
                         <div className="px-2 mb-3 flex items-center gap-2">
                           <Play size={16} fill="currentColor" className="text-blue-500" />
-                          <span className="text-[0.875rem] font-bold text-white tracking-widest lowercase">
-                            anúncios em shorts
+                          <span className="text-[0.875rem] font-bold text-white tracking-widest">
+                            Anúncios em Shorts
                           </span>
                         </div>
                         <div className="flex overflow-x-auto hide-scrollbar gap-3 pb-2">
