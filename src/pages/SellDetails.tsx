@@ -354,7 +354,7 @@ export default function SellDetails() {
                                 ) : (
                                     <input 
                                         autoFocus
-                                        type={item.key === 'price' ? 'number' : item.key === 'phone' ? 'tel' : 'text'}
+                                        type={item.key === 'price' ? 'number' : 'text'}
                                         value={item.value}
                                         onChange={(e) => {
                                             const val = e.target.value;
@@ -367,9 +367,6 @@ export default function SellDetails() {
                                         className="w-full bg-zinc-900 border-none rounded-[6px] px-3 py-3 text-[0.875rem] focus:ring-1 focus:ring-primary outline-none transition-all"
                                     />
                                 )}
-                                <div className="absolute right-3 bottom-3 text-[0.625rem] text-zinc-600 font-bold uppercase pointer-events-none">
-                                    Pressione Enter
-                                </div>
                             </div>
                         )}
                     </motion.div>

@@ -192,7 +192,7 @@ export default function Sell() {
               Número de Telefone
             </label>
             <input 
-              type="tel" 
+              type="text" 
               placeholder="+258 ..."
               value={phone}
               onChange={(e) => setPhone(e.target.value)}

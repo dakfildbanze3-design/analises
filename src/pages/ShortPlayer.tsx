@@ -649,17 +649,17 @@ export default function ShortPlayer() {
          <AdBanner useImageBackground={true} className="mt-4 mx-4" />
       </div>
 
-      {/* Up Next List (Single Card full width feed with avatar, strictly video) */}
-      <div className="border-t border-outline-variant/10 bg-surface">
-         <div className="flex flex-col gap-0">
+      {/* Up Next List (Grid of 2 horizontal video cards) */}
+      <div className="border-t border-outline-variant/10 bg-surface px-1.5 py-4">
+         <div className="grid grid-cols-2 gap-[6px]">
             {relatedVideos.map((item, index) => (
                 <div 
                   key={`related-${item.id}-${index}`}
-                  className="w-full bg-background pb-1.5 border-b border-outline-variant/5"
+                  className="flex flex-col bg-background rounded-[10px] overflow-hidden shadow-sm border border-outline-variant/5 h-full"
                 >
                   {/* Video Content FIRST */}
                   <div 
-                     className="relative w-full aspect-video bg-black cursor-pointer rounded-[10px] overflow-hidden shadow-md mx-auto"
+                     className="relative w-full aspect-video bg-black cursor-pointer overflow-hidden"
                      onClick={() => {
                         navigate(`/short/${item.id}`);
                         window.scrollTo(0,0);
@@ -684,67 +684,33 @@ export default function ShortPlayer() {
                               loop
                               playsInline
                            />
-                        );
-                     })()}
-                     {/* Overlay Stats/Video Tag */}
-                     <div className="absolute top-2 right-2 bg-black/60 text-white text-[0.625rem] font-bold px-2 py-1 rounded-[4px] tracking-wider uppercase">
-                        VÍDEO
-                     </div>
-                  </div>
-
-                  {/* Title & Avatar Details BELOW Video */}
-                  <div className="px-3 mt-1.5 pb-1 pt-0 flex items-center">
-                     <img 
-                        src={item.sellerAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.sellerId}`} 
-                        className="w-9 h-9 rounded-full object-cover border border-outline-variant/30 flex-shrink-0" 
-                        onClick={() => navigate(`/user/${item.sellerId}`)}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.sellerId}`;
-                        }}
-                     />
-                     
-                     <div className="w-[1px] h-[32px] bg-outline-variant/10 mx-2" />
-
-                     <div className="flex flex-col flex-1 min-w-0">
-                        {/* Unified Product Info */}
-                        <div className="flex flex-col">
-                           <h3 className="text-[0.9375rem] leading-snug text-on-surface line-clamp-2 cursor-pointer">
-                              <span className="font-bold">{item.name}</span> - <span className="text-on-surface-variant">{item.description}</span>
-                           </h3>
-                        </div>
-                     </div>
-                  </div>
-
-                  {/* Horizontal Divider between Info and Stats */}
-                  <div className="h-[1px] w-[calc(100%-24px)] mx-auto bg-outline-variant/5 my-1" />
-                  
-                  <div className="px-3 flex flex-wrap items-center justify-between">
-                     <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                        {/* Price Badge in related card */}
-                        <div className="px-2 py-0.5 bg-blue-900/10 rounded-[3px] text-[0.75rem] text-blue-800 font-bold border border-blue-900/20">
-                           {item.price} MT
-                        </div>
-                        {item.category && (
-                           <span className="px-2 py-0.5 bg-white/10 rounded-[3px] text-[0.6875rem] text-primary font-bold border border-primary/20">
-                              {item.category}
-                           </span>
-                        )}
-                     </div>
-
-                     <div className="flex items-center gap-1.5 text-[0.75rem] text-on-surface-variant font-medium mb-2">
-                        <span className="font-bold text-on-surface/60 hover:underline cursor-pointer" onClick={() => navigate(`/user/${item.sellerId}`)}>
-                           {item.sellerName || 'Vendedor'}
-                        </span>
-                           <span className="opacity-40">•</span>
-                           <span>{item.views || 0} visualizações</span>
-                           <span className="opacity-40">•</span>
-                           <span>{item.createdAt ? formatRelativeTime(item.createdAt) : 'há pouco'}</span>
-                        </div>
-                     </div>
-                  </div>
-               ))}
-            </div>
-         </div>
+                         );
+                      })()}
+                      {/* Overlay Stats/Video Tag */}
+                      <div className="absolute top-1.5 right-1.5 bg-black/60 text-white text-[0.5rem] font-black px-1.5 py-0.5 rounded-[2px] tracking-widest uppercase">
+                         VÍDEO
+                      </div>
+                   </div>
+ 
+                   {/* Title & Price BELOW Video - Optimized for 2-column grid */}
+                   <div className="p-2 flex flex-col flex-1">
+                      <h3 className="text-[0.75rem] leading-snug font-bold text-on-surface line-clamp-2 min-h-[2.4em]">
+                         {item.name}
+                      </h3>
+                      
+                      <div className="mt-2 flex items-center justify-between">
+                         <span className="text-[0.6875rem] font-black text-blue-800">
+                            {item.price} MT
+                         </span>
+                         <span className="text-[0.625rem] text-on-surface-variant font-medium opacity-60">
+                            {item.views || 0} v
+                         </span>
+                      </div>
+                   </div>
+                </div>
+             ))}
+          </div>
+       </div>
 
       {/* Comments Full Screen (Preta Brilhante) */}
       <AnimatePresence>

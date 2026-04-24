@@ -168,8 +168,11 @@ export const notificationService = {
         return;
       }
 
+      // Notification permission request removed for better UX
+      /*
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
+      */
         const token = await getToken(messaging, {
           vapidKey: (import.meta as any).env.VITE_FIREBASE_VAPID_KEY
         });
@@ -179,7 +182,9 @@ export const notificationService = {
           await updateDoc(userRef, { fcmToken: token });
           console.log('FCM Token saved');
         }
+      /*
       }
+      */
     } catch (error) {
            console.warn('FCM registration skipped or failed (unsupported in some dev environments):', error);
     }

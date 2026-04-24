@@ -240,7 +240,7 @@ export default function SearchPage() {
                   {results.some(r => r.dataType === 'product') && (
                     <div className="space-y-4">
                       <h3 className="text-[0.625rem] font-black text-zinc-500 uppercase tracking-[0.2em]">Produtos & Boladas</h3>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-[6px]">
                         {results.filter(r => r.dataType === 'product').map((product) => (
                           <motion.div
                             layout

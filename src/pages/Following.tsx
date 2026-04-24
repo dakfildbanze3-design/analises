@@ -76,7 +76,7 @@ const Following: React.FC = () => {
           <Loader2 className="animate-spin text-white" size={32} />
         </div>
       ) : products.length > 0 ? (
-        <div className="grid grid-cols-2 gap-[4px] p-1">
+        <div className="grid grid-cols-2 gap-[6px] p-1">
           {products.map((product) => (
             <motion.div
               key={product.id}
