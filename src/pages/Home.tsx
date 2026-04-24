@@ -190,13 +190,13 @@ export default function Home() {
       className="pt-12 pb-16"
     >
       {/* Categories Horizontal Menu */}
-      <section className="bg-surface pt-2 pb-1 overflow-x-auto hide-scrollbar flex gap-1.5 pl-2 z-30 sticky top-12 w-full border-b border-outline-variant/10">
+      <section className="glass-black pt-2 pb-2 overflow-x-auto hide-scrollbar flex gap-2 pl-3 z-30 sticky top-12 w-full">
         {categories.map((cat) => (
           <div 
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className={`flex-shrink-0 px-4 py-1.5 rounded-[3px] text-[0.6875rem] font-bold uppercase tracking-widest cursor-pointer transition-colors
-              ${activeCategory === cat ? 'bg-white text-zinc-950' : 'bg-surface-container text-on-surface-variant'}
+            className={`flex-shrink-0 px-5 py-1.5 rounded-[3px] text-[0.6875rem] font-black uppercase tracking-widest cursor-pointer transition-all duration-300
+              ${activeCategory === cat ? 'bg-white text-black shadow-[0_4px_15px_rgba(0,0,0,0.5)] scale-105' : 'bg-white/10 text-white/60 hover:bg-white/20'}
             `}
           >
             {cat}
@@ -205,22 +205,22 @@ export default function Home() {
       </section>
 
       {/* Shorts Header (Top) */}
-      <div className="px-4 pt-4 pb-2 flex items-center gap-2 bg-surface">
-        <Play size={16} fill="currentColor" className="text-blue-500" />
-        <span className="text-[0.875rem] font-bold text-white tracking-widest">
-          Anúncios em Shorts
+      <div className="px-4 pt-6 pb-2 flex items-center gap-2 bg-surface">
+        <Play size={18} fill="currentColor" className="text-blue-500 shadow-sm" />
+        <span className="text-[20px] font-black text-white tracking-tighter leading-none">
+          Anúncios em shorts
         </span>
       </div>
 
       {/* Destaques / Featured Cards (Top) */}
       {!loading && products.length > 0 && products.some(p => p.productType === 'short' || p.videoUrl) && (
-        <section className="px-2 pt-2 pb-4 bg-surface">
-          <div className="flex overflow-x-auto hide-scrollbar gap-3 pb-2">
+        <section className="px-1 pt-2 pb-4 bg-surface">
+          <div className="flex overflow-x-auto hide-scrollbar gap-[4px] pb-2">
             {products.filter((p: any) => p.productType === 'short' || p.videoUrl).map((product: any) => (
               <div 
                 key={`featured-${product.id}`}
                 onClick={() => navigate(`/short/${product.id}`)}
-                className="relative flex-shrink-0 w-[170px] h-[340px] rounded-[16px] overflow-hidden cursor-pointer group bg-surface-container shadow-sm"
+                className="relative flex-shrink-0 w-[170px] h-[340px] rounded-[10px] overflow-hidden cursor-pointer group bg-surface-container shadow-sm"
               >
                 {(() => {
                   if (!product.videoUrl) {
@@ -276,7 +276,7 @@ export default function Home() {
       )}
 
       {/* Product Feed */}
-      <div className="flex flex-col gap-[3px] bg-background mt-2">
+      <div className="flex flex-col bg-background mt-2">
         {loading ? (
           <div className="py-12 flex justify-center">
             <Loader2 size={32} className="animate-spin text-zinc-800" />
@@ -307,19 +307,19 @@ export default function Home() {
                   <React.Fragment key={product.id}>
                     {/* Interleaved Shorts Carousel */}
                     {showVideosHere && videosSlice.length > 0 && (
-                      <section className="px-2 pt-4 pb-6 bg-surface mt-[3px]">
+                      <section className="px-1 pt-4 pb-6 bg-surface mt-2">
                         <div className="px-2 mb-3 flex items-center gap-2">
-                          <Play size={16} fill="currentColor" className="text-blue-500" />
-                          <span className="text-[0.875rem] font-bold text-white tracking-widest">
-                            Anúncios em Shorts
+                          <Play size={18} fill="currentColor" className="text-blue-500 shadow-sm" />
+                          <span className="text-[20px] font-black text-white tracking-tighter leading-none">
+                            Anúncios em shorts
                           </span>
                         </div>
-                        <div className="flex overflow-x-auto hide-scrollbar gap-3 pb-2">
+                        <div className="flex overflow-x-auto hide-scrollbar gap-[4px] pb-2">
                           {videosSlice.map((videoProduct: any) => (
                             <div 
                               key={`interleaved-short-carousel-${videoProduct.id}`}
                               onClick={() => navigate(`/short/${videoProduct.id}`)}
-                              className="relative flex-shrink-0 w-[170px] h-[340px] rounded-[16px] overflow-hidden cursor-pointer group bg-surface-container shadow-sm"
+                              className="relative flex-shrink-0 w-[170px] h-[340px] rounded-[10px] overflow-hidden cursor-pointer group bg-surface-container shadow-sm"
                             >
                               {(() => {
                                 if (!videoProduct.videoUrl) {
@@ -383,7 +383,7 @@ export default function Home() {
                       return (
                         <div 
                           key={`vertical-video-post-${v.id}-${index}`}
-                          className="px-2 py-4 bg-background mt-[3px]"
+                          className="px-1 py-4 bg-background mt-2"
                         >
                           <div 
                             onClick={() => navigate(`/short/${v.id}`)}
@@ -475,7 +475,7 @@ export default function Home() {
 
                     <article 
                       onClick={() => navigate(`/product/${product.id}`)}
-                      className={`bg-surface pb-4 cursor-pointer ${showVideosHere && videosSlice.length > 0 ? 'mt-[3px]' : ''}`}
+                      className={`bg-surface pb-4 cursor-pointer ${showVideosHere && videosSlice.length > 0 ? 'mt-1' : ''}`}
                     >
                       {/* Image */}
                       <div className="w-full aspect-square bg-surface-container-low relative">
@@ -489,9 +489,12 @@ export default function Home() {
                             (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/placeholder/800/800';
                           }}
                         />
-                        {product.discount && (
-                          <div className="absolute top-3 left-3 bg-error text-on-error text-[0.625rem] font-black px-2 py-1 rounded-[2px]">{product.discount}</div>
-                        )}
+                <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                   {product.discount && (
+                     <div className="bg-error text-white text-[0.625rem] font-black px-2 py-1 rounded-sm shadow-lg">{product.discount}</div>
+                   )}
+                   <div className="bg-black/40 backdrop-blur-md text-white text-[0.625rem] font-black px-2 py-1 rounded-sm border border-white/10">NOVO</div>
+                </div>
                       </div>
                       
                       {/* Content */}
@@ -542,7 +545,8 @@ export default function Home() {
 
                     {/* Show Ad after every 4th product */}
                     {(index + 1) % 4 === 0 && (index + 1) % 8 !== 0 && (
-                      <div className="px-2 py-1 mt-[3px] bg-background">
+                      <div className="px-1 py-1 mt-1 bg-background">
+                        <div className="px-2 py-1 text-[0.875rem] font-black text-white/40 uppercase tracking-widest">Anúncio</div>
                         <AdBanner />
                       </div>
                     )}
@@ -581,7 +585,7 @@ export default function Home() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed bottom-0 left-0 w-full bg-surface-container-high rounded-t-xl z-[90] pb-safe flex flex-col overflow-hidden"
+              className="fixed bottom-0 left-0 w-full glass-black rounded-t-3xl z-[90] pb-safe flex flex-col overflow-hidden border-t border-white/20"
             >
               <div className="p-4 flex justify-between items-center border-b border-outline-variant/10">
                 <div className="flex items-center gap-2">

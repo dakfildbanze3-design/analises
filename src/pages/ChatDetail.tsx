@@ -555,12 +555,9 @@ export default function ChatDetail() {
 
   return (
     <div className="flex flex-col h-screen bg-black/90">
-      {/* Header */}
-      <header className="bg-black/80 backdrop-blur-md px-4 py-3 flex items-center justify-between sticky top-0 z-50">
+      {/* Header (Back button removed to rely on TopBar) */}
+      <header className="bg-black/80 backdrop-blur-md px-4 py-3 flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-1 -ml-1 text-white hover:bg-white/10 rounded-full transition-colors active:scale-95">
-            <ArrowLeft size={24} />
-          </button>
           
           {isSearching ? (
             <div className="flex-1 ml-2 flex items-center bg-white/10 rounded-full px-4 py-1.5">

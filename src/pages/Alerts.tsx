@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, MessageSquare, UserPlus, Loader2, CheckCircle2, Tag, Search } from 'lucide-react';
+import { Heart, MessageSquare, UserPlus, Loader2, CheckCircle2, Tag, Search, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import { auth } from '../lib/firebase';
 import { notificationService, AppNotification } from '../services/notificationService';
@@ -60,23 +60,22 @@ export default function AlertsPage() {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="pt-12 pb-16 min-h-screen bg-black"
+      className="pb-20 min-h-screen bg-black"
     >
-      {/* Header */}
-      <div className="bg-zinc-900/50 backdrop-blur-md px-4 py-4 flex flex-col gap-3 sticky top-0 z-10">
-        <div className="flex justify-between items-center">
-          <h2 className="text-[1.25rem] font-bold text-white">Notificações</h2>
+      {/* Header Controls */}
+      <div className="bg-black px-4 pt-4 pb-4 flex flex-col gap-4 sticky top-0 z-10">
+        <div className="flex justify-end">
           <button 
             onClick={handleMarkAllRead}
-            className="text-primary text-[0.75rem] font-bold flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+            className="text-white/60 text-[0.75rem] font-bold flex items-center gap-1.5 hover:text-white transition-colors"
           >
             <CheckCircle2 size={14} />
-            Lido
+            Marcar tudo como lido
           </button>
         </div>
         
         {/* Filter Tabs */}
-        <div className="flex gap-2 mb-1">
+        <div className="flex gap-2">
           {filterChips.map((chip) => (
             <button 
               key={chip}

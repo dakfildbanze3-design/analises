@@ -132,19 +132,7 @@ export default function PublicProfile() {
       animate={{ opacity: 1 }}
       className="pb-20 bg-background min-h-screen"
     >
-      <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between p-4 pointer-events-none">
-        <button 
-          onClick={() => navigate(-1)}
-          className="w-10 h-10 flex items-center justify-center bg-black/30 backdrop-blur-md rounded-full text-white pointer-events-auto active:scale-95 transition-transform"
-        >
-          <ArrowLeft size={24} />
-        </button>
-        <button 
-          className="w-10 h-10 flex items-center justify-center bg-black/30 backdrop-blur-md rounded-full text-white pointer-events-auto active:scale-95 transition-transform"
-        >
-          <Share2 size={24} />
-        </button>
-      </header>
+      {/* Redundant header removed to rely on TopBar */}
 
       {/* Profile Header Section */}
       <section className="relative w-full">

@@ -161,8 +161,8 @@ export default function Sell() {
               onChange={handleAddImage}
               disabled={isUploading || images.length >= 5}
             />
-            <div className={`flex items-center gap-2 bg-[#007AFF] text-white px-4 py-2.5 rounded-[3px] font-bold text-[0.75rem] uppercase tracking-wider active:scale-95 transition-all ${(isUploading || images.length >= 5) ? 'opacity-50' : ''}`}>
-              {isUploading ? <Loader2 size={18} className="animate-spin" /> : <Camera size={18} strokeWidth={2.5} />}
+            <div className={`flex items-center gap-2 shiny-button text-white px-6 py-3 rounded-full font-black text-[0.75rem] uppercase tracking-[0.2em] shadow-xl ${(isUploading || images.length >= 5) ? 'opacity-50' : ''}`}>
+              {isUploading ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} strokeWidth={3} />}
               {isUploading ? 'A carregar...' : 'Adicionar Fotos'}
             </div>
           </label>
@@ -263,7 +263,7 @@ export default function Sell() {
         <button 
           type="submit"
           disabled={isSubmitting || images.length === 0}
-          className="w-full bg-blue-900 text-white font-bold py-4 rounded-[3px] text-[0.875rem] uppercase tracking-widest active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:active:scale-100 shadow-md"
+          className="w-full shiny-button text-white font-black py-4 rounded-full text-[0.875rem] uppercase tracking-[0.2em] shadow-2xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:active:scale-100"
         >
           {isSubmitting ? (
             <>

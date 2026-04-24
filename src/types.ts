@@ -26,3 +26,17 @@ export interface Notification {
   time: string;
   image?: string;
 }
+
+export interface UserProfile {
+  id: string;
+  displayName?: string;
+  photoURL?: string;
+  email?: string;
+  phoneNumber?: string;
+  city?: string;
+  bio?: string;
+  followersCount?: number;
+  followingCount?: number;
+  productsCount?: number;
+  isVerified?: boolean;
+}

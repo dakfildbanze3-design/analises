@@ -139,7 +139,7 @@ export default function Register() {
 
           <button 
             type="submit"
-            className="w-full bg-blue-900 text-white py-4 rounded-[3px] font-black uppercase tracking-widest text-[0.875rem] shadow-lg active:scale-[0.98] transition-all mt-6 hover:brightness-110"
+            className="w-full shiny-button text-white py-4 rounded-full font-black uppercase tracking-[0.2em] text-[0.875rem] shadow-2xl mt-6"
           >
             Criar Conta
           </button>

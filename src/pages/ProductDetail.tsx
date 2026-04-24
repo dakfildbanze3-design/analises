@@ -487,79 +487,8 @@ export default function ProductDetail() {
           {renderImageGrid()}
         </section>
 
-        <header className="bg-black/90 backdrop-blur-md text-white flex items-center justify-between p-3 h-12 sticky top-0 z-50">
-          <button 
-            onClick={() => navigate(-1)}
-            className="flex items-center justify-center text-white active:scale-95 transition-transform"
-          >
-            <ArrowLeft size={24} />
-          </button>
-          
-          <h1 className="text-[0.875rem] font-black uppercase tracking-widest">Produto</h1>
-
-          <div className="flex gap-4 relative">
-            <button 
-              onClick={() => shareContent(product.name, `Veja no Bazar: ${product.name}`, window.location.href)}
-              className="text-white active:scale-95 transition-transform"
-            >
-              <Share2 size={20} />
-            </button>
-            <div className="relative">
-              <button 
-                onClick={() => setShowOptionsMenu(!showOptionsMenu)}
-                className="text-white active:scale-95 transition-transform"
-              >
-                <MoreVertical size={24} />
-              </button>
-
-              <AnimatePresence>
-                {showOptionsMenu && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                    className="absolute top-10 right-0 w-48 bg-zinc-900 rounded-[8px] shadow-2xl flex flex-col overflow-hidden border border-zinc-800 z-[60]"
-                  >
-                    <button 
-                      onClick={() => {
-                        const url = product.images?.[0];
-                        if (url) window.open(url, '_blank');
-                        setShowOptionsMenu(false);
-                      }}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 transition-colors text-left"
-                    >
-                      <Download size={18} className="text-white" />
-                      <span className="text-[0.875rem] font-medium text-white">Salvar na galeria</span>
-                    </button>
-                    {isOwner ? (
-                      <button 
-                        onClick={handleDeleteProduct}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 transition-colors text-left"
-                      >
-                        <Trash2 size={18} className="text-error" />
-                        <span className="text-[0.875rem] font-medium text-error">Excluir</span>
-                      </button>
-                    ) : (
-                      <button 
-                        onClick={() => {
-                          setReportModalOpen(true);
-                          setShowOptionsMenu(false);
-                        }}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 transition-colors text-left"
-                      >
-                        <Flag size={18} className="text-error" />
-                        <span className="text-[0.875rem] font-medium text-error">Denunciar</span>
-                      </button>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-        </header>
-
         {/* Sticky Label Bar */}
-        <div className="bg-surface/95 backdrop-blur-md sticky top-12 z-40 border-b border-white/5 py-2 px-4 -mt-[3px]">
+        <div className="glass-black sticky top-12 z-40 py-3 px-4 -mt-[3px]">
           <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
             <div className="bg-zinc-800/50 px-2 py-1 rounded-[3px] border border-zinc-800/30 flex flex-col items-center min-w-[80px]">
               <span className="text-[0.625rem] text-on-surface-variant/60 uppercase font-black leading-none mb-1 tracking-tight">Preço</span>
@@ -678,7 +607,7 @@ export default function ProductDetail() {
                    <div className="flex gap-2 mt-2">
                      <button 
                        onClick={() => window.open(`https://wa.me/${product.sellerPhone?.replace(/\D/g, '')}`, '_blank')}
-                       className="flex-1 bg-blue-900 h-[38px] flex items-center justify-center text-[0.75rem] font-black tracking-widest rounded-[3px] text-white active:scale-95 transition-transform shadow-md uppercase"
+                       className="flex-1 shiny-button h-[42px] flex items-center justify-center text-[0.75rem] font-black tracking-[0.2em] rounded-full text-white shadow-xl uppercase"
                      >
                        CONTACTAR VENDEDOR
                      </button>
@@ -690,7 +619,7 @@ export default function ProductDetail() {
             {/* Map and Suggestions container */}
             <div className="mt-2 flex flex-col pt-2">
               <h2 className="text-[0.75rem] font-bold text-on-surface uppercase tracking-widest mb-3">Localização</h2>
-              <div className="w-full h-[130px] bg-zinc-800 relative z-0 mb-6 rounded-[16px] overflow-hidden shadow-md">
+              <div className="w-full h-[130px] bg-zinc-800 relative z-0 mb-6 rounded-[10px] overflow-hidden shadow-md">
                 <iframe 
                   title="Google Maps Location"
                   src={`https://maps.google.com/maps?q=${encodeURIComponent(product.location || 'Maputo')}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
@@ -706,7 +635,7 @@ export default function ProductDetail() {
                     <h2 className="text-[0.875rem] font-black text-on-surface uppercase tracking-[0.2em]">Podes Gostar Também</h2>
                     <div className="h-px flex-1 bg-outline-variant/10 ml-4"></div>
                   </div>
-                  <div className="grid grid-cols-2 gap-[3px] bg-background">
+                  <div className="grid grid-cols-2 gap-[4px] bg-background">
                     {suggestions.map((item) => (
                       <div 
                         key={item.id}
@@ -714,7 +643,7 @@ export default function ProductDetail() {
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                           navigate(`/product/${item.id}`);
                         }}
-                        className="w-full bg-surface-container-low flex flex-col cursor-pointer active:scale-[0.98] transition-all group"
+                        className="w-full bg-surface-container-low flex flex-col rounded-[10px] overflow-hidden cursor-pointer active:scale-[0.98] transition-all group"
                       >
                         <div className="w-full aspect-[4/5] relative overflow-hidden bg-surface-container">
                           <img 
@@ -758,9 +687,9 @@ export default function ProductDetail() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-[100] bg-background flex flex-col h-screen overflow-hidden font-sans"
+            className="fixed inset-0 z-[100] glass-black flex flex-col h-screen overflow-hidden font-sans"
           >
-            <div className="flex items-center justify-between p-4 border-b border-outline-variant/10 bg-surface">
+            <div className="flex items-center justify-between p-4 border-b border-white/10 glass-black">
               <h2 className="text-[1.125rem] font-black tracking-tight text-on-surface uppercase leading-none">Comentários ({comments.length})</h2>
               <button 
                 onClick={() => setShowComments(false)} 

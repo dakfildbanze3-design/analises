@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2, ArrowLeft, Pin } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { collection, query, where, onSnapshot, orderBy, getDoc, doc, limit } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, getDoc, doc } from 'firebase/firestore';
 import { formatRelativeTime } from '../lib/dateUtils';
-import { Pin } from 'lucide-react';
 
 const filterChips = ['Todas', 'Não Lidas'];
 
@@ -107,37 +106,38 @@ export default function ChatPage() {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="pt-12 pb-16"
+      className="pb-20"
     >
-      {/* Search & Filter Bar */}
-      <section className="bg-surface-container px-4 py-3 sticky top-12 z-40">
-        <div className="flex gap-2 mb-3 overflow-x-auto hide-scrollbar">
+      {/* Filter Chips (Header title and back button removed to rely on TopBar) */}
+      <div className="p-4 pt-2 space-y-4">
+        <div className="relative">
+          <input 
+            className="w-full bg-white/10 border-none rounded-[3px] py-1.5 pl-3 pr-8 text-xs focus:outline-none transition-all font-medium placeholder:text-white/20" 
+            placeholder="Procurar conversas..." 
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <Search size={16} strokeWidth={3} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/60" />
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto hide-scrollbar">
           {filterChips.map((chip) => (
             <button 
               key={chip}
               onClick={() => setActiveFilter(chip)}
-              className={`px-3 py-1.5 rounded-[3px] text-[0.6875rem] font-medium uppercase tracking-wider whitespace-nowrap transition-colors
-                ${activeFilter === chip ? 'bg-primary-container text-on-primary-container' : 'bg-surface-container-highest text-primary hover:bg-surface-container-highest/80'}
+              className={`px-4 py-1.5 rounded-[3px] text-[0.6875rem] font-medium uppercase tracking-wider whitespace-nowrap transition-colors
+                ${activeFilter === chip ? 'bg-white text-black' : 'bg-white/5 text-white/40 hover:bg-white/10'}
               `}
             >
               {chip}
             </button>
           ))}
         </div>
-        <div className="relative">
-          <input 
-            className="w-full bg-surface-container-low border-none rounded-[3px] py-2 pl-9 pr-4 text-[0.75rem] focus:ring-1 focus:ring-primary/30 transition-all placeholder:text-on-surface-variant/40" 
-            placeholder="Buscar conversas..." 
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <Search size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant/60" />
-        </div>
-      </section>
+      </div>
 
       {/* Chat List */}
-      <section className="flex flex-col">
+      <section className="flex flex-col px-4 pb-4">
         {loading ? (
           <div className="py-12 flex justify-center">
             <Loader2 size={32} className="animate-spin text-primary" />

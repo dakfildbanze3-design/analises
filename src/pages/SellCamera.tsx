@@ -132,7 +132,7 @@ export default function SellCamera() {
   }
 
   return (
-    <div className="fixed inset-0 bg-black z-[100] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-black z-40 flex flex-col overflow-hidden">
       {/* Hidden Inputs */}
       <input 
           ref={videoInputRef}
@@ -172,12 +172,8 @@ export default function SellCamera() {
       {/* Visual Overlay like the gray bar at the top */}
       <div className="absolute top-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/20 rounded-full z-20" />
 
-      {/* Top Controls */}
-      <div className="absolute top-4 left-0 w-full px-4 flex justify-between items-center z-10">
-        <button onClick={() => navigate(-1)} className="p-2 bg-black/20 rounded-full text-white backdrop-blur-sm active:scale-95 transition-all">
-          <X size={24} />
-        </button>
-        
+      {/* Top Controls (Back button removed to rely on TopBar) */}
+      <div className="absolute top-4 left-0 w-full px-4 flex justify-end items-center z-10">
         <div className="text-white font-bold text-[0.875rem]">15</div>
       </div>
       {/* Right Sidebar Controls */}

@@ -416,18 +416,10 @@ export default function ShortPlayer() {
             </div>
         )}
         
-        {/* Top Back/Minimize Button - appears overlaid like YouTube minimize video */}
+      {/* Options Menu (Back button removed to rely on TopBar) */}
+      <div className="absolute top-3 right-3 z-50">
         <button 
-          onClick={() => navigate(-1)}
-          className="absolute top-3 left-3 p-1.5 bg-black/40 hover:bg-black/60 backdrop-blur-sm rounded-full text-white z-50 transition-colors shadow-lg"
-        >
-          <ChevronDown size={28} />
-        </button>
-
-        {/* Options Menu */}
-        <div className="absolute top-3 right-3 z-50">
-          <button 
-            onClick={() => setShowOptionsMenu(!showOptionsMenu)}
+          onClick={() => setShowOptionsMenu(!showOptionsMenu)}
             className="p-1.5 bg-black/40 hover:bg-black/60 backdrop-blur-sm rounded-full text-white transition-colors shadow-lg"
           >
             <MoreVertical size={24} />
@@ -484,12 +476,10 @@ export default function ShortPlayer() {
         </div>
       </div>
 
-      <div className="h-[1px] w-full bg-outline-variant/10" />
-
       {/* Badges Row (Price, Location, Phone, Category) - STICKY exactly below the sticky video */}
-      <div className="flex items-center gap-1.5 px-4 py-2 bg-black/95 backdrop-blur-md sticky top-[56.25vw] md:top-[252px] z-30 border-b border-white/5 overflow-x-auto hide-scrollbar shadow-lg">
+      <div className="flex items-center gap-[4px] px-1 py-3 glass-black sticky top-[56.25vw] md:top-[252px] z-30 overflow-x-auto hide-scrollbar shadow-xl">
           {/* Price Badge - High Visibility */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-900 border border-blue-800 rounded-[3px] text-[0.8125rem] text-white font-black shadow-md whitespace-nowrap shrink-0">
+          <div className="flex items-center gap-1.5 px-4 py-2 bg-blue-900 border border-blue-800 rounded-[3px] text-[0.875rem] text-white font-black shadow-lg shadow-black whitespace-nowrap shrink-0 transition-transform active:scale-95">
              <ShoppingBag size={14} className="opacity-80" />
              <span>{product.price} MT</span>
           </div>
@@ -528,8 +518,8 @@ export default function ShortPlayer() {
                }}
             />
             
-            {/* 1px Vertical Separator */}
-            <div className="w-[1px] h-[36px] bg-outline-variant/20 mx-2.5" />
+            {/* Space instead of vertical separator */}
+            <div className="w-[10px] shrink-0" />
 
             <div className="flex-1 min-w-0 flex flex-col">
                {/* Product Details: Name - Description */}
@@ -542,10 +532,8 @@ export default function ShortPlayer() {
             </div>
          </div>
 
-         <div className="h-[1px] w-full bg-outline-variant/10 mb-3" />
-
          {/* Stats and Actions Row */}
-         <div className="flex items-center justify-between">
+         <div className="flex items-center justify-between mt-3">
             <div className="flex flex-col flex-1 min-w-0">
                <div className="text-[0.75rem] text-on-surface-variant flex items-center gap-1.5 font-medium truncate">
                   <span 
@@ -608,7 +596,7 @@ export default function ShortPlayer() {
          {/* Youtube Style Comments Box immediately under the info row */}
          <div 
             onClick={() => setIsCommentsOpen(true)}
-            className="bg-zinc-900/40 rounded-[12px] p-3 mt-3 w-full cursor-pointer hover:bg-zinc-800 transition-colors border border-white/5"
+            className="bg-zinc-900/40 rounded-[10px] p-3 mt-3 w-full cursor-pointer hover:bg-zinc-800 transition-colors border border-white/5"
          >
             <div className="flex items-center gap-2 mb-2">
                 <span className="text-[0.875rem] font-bold text-white">Comentários</span>
@@ -640,7 +628,7 @@ export default function ShortPlayer() {
 
          {/* Extra Actions for the Product (WhatsApp) - Hidden if own post */}
          {auth.currentUser?.uid !== product?.sellerId && (
-           <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/5">
+           <div className="flex items-center gap-2 mt-6 pt-6 border-t border-white/10">
             <button 
                 onClick={() => {
                    const phoneStr = product?.sellerPhone || '';
@@ -651,9 +639,9 @@ export default function ShortPlayer() {
                        alert('O vendedor não disponibilizou número de WhatsApp.');
                    }
                 }}
-                className="flex items-center gap-1.5 px-4 h-9 bg-green-600 rounded-[4px] hover:bg-green-700 transition-colors flex-1 justify-center shadow-sm text-white font-bold text-[0.8125rem]"
+                className="flex items-center gap-2 px-6 h-12 shiny-button rounded-full flex-1 justify-center shadow-2xl text-white font-black text-[0.875rem] tracking-[0.2em] uppercase"
             >
-               WhatsApp
+               CONTACTAR VENDEDOR
             </button>
          </div>
          )}
@@ -671,7 +659,7 @@ export default function ShortPlayer() {
                 >
                   {/* Video Content FIRST */}
                   <div 
-                     className="relative w-full aspect-video bg-black cursor-pointer rounded-[16px] overflow-hidden shadow-md mx-auto"
+                     className="relative w-full aspect-video bg-black cursor-pointer rounded-[10px] overflow-hidden shadow-md mx-auto"
                      onClick={() => {
                         navigate(`/short/${item.id}`);
                         window.scrollTo(0,0);
@@ -766,10 +754,10 @@ export default function ShortPlayer() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-50 bg-gradient-to-br from-[#1a1a1a] via-[#0a0a0a] to-black flex flex-col pointer-events-auto h-screen w-full"
+            className="fixed inset-0 z-50 glass-black flex flex-col pointer-events-auto h-screen w-full"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black/40 backdrop-blur-md shrink-0">
+            <div className="flex items-center justify-between p-4 border-b border-white/10 glass-black shrink-0">
               <h2 className="text-[1.125rem] font-bold text-white">Comentários</h2>
               <button 
                  onClick={() => setIsCommentsOpen(false)} 

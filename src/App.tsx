@@ -11,6 +11,8 @@ import { notificationService } from './services/notificationService';
 
 // Lazy loading components for faster initial load
 const Home = lazy(() => import('./pages/Home'));
+const Following = lazy(() => import('./pages/Following'));
+const DiscoverUsers = lazy(() => import('./pages/DiscoverUsers'));
 const Chat = lazy(() => import('./pages/Chat'));
 const Alerts = lazy(() => import('./pages/Alerts'));
 const Profile = lazy(() => import('./pages/Profile'));
@@ -55,7 +57,8 @@ class ErrorBoundary extends Component<any, any> {
       return (
         <div style={{
           height: '100vh',
-          backgroundColor: '#131313',
+          backgroundColor: '#000000',
+          backgroundImage: 'radial-gradient(circle at top, #111111 0%, #000000 100%)',
           color: 'white',
           display: 'flex',
           flexDirection: 'column',
@@ -179,6 +182,9 @@ function AppContent() {
   const isSearch = location.pathname === '/search';
   const isChat = location.pathname === '/chat';
   const isChatDetail = location.pathname.startsWith('/chat/');
+  const isFollowing = location.pathname === '/following';
+  const isDiscover = location.pathname === '/discover';
+  const isAlerts = location.pathname === '/alerts';
   const isAuthPage = ['/login', '/register', '/profile-setup'].includes(location.pathname);
 
   // Use SplashScreen to cover both the fixed timer and the firebase auth loading
@@ -188,10 +194,24 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-background text-on-surface">
-      {!isAuthPage && !isShortPlayer && !isSellCamera && !isSearch && (
+      {!isAuthPage && (
         <TopBar 
-          showBack={isProductDetail || isPublicProfile || isSettings || isSell || isSellDetails} 
-          title={isProductDetail ? "PRODUTO" : isPublicProfile ? "PERFIL" : isSettings ? "DEFINIÇÕES" : isSell ? "VENDER" : isSellDetails ? "Adicione detalhes" : "BOLADAS"}
+          showBack={isProductDetail || isPublicProfile || isSettings || isSell || isSellDetails || isFollowing || isDiscover || isSearch || isChat || isChatDetail || isShortPlayer || isSellCamera || isAlerts} 
+          title={
+            isProductDetail ? "PRODUTO" : 
+            isPublicProfile ? "PERFIL" : 
+            isSettings ? "DEFINIÇÕES" : 
+            isSell ? "VENDER" : 
+            isSellDetails ? "Adicione detalhes" : 
+            isFollowing ? "SEGUINDO" : 
+            isDiscover ? "DESCOBRIR" : 
+            isSearch ? "PESQUISAR" : 
+            isChat ? "MENSAGENS" : 
+            isChatDetail ? "CHAT" : 
+            isAlerts ? "Notificações" :
+            isShortPlayer ? "Anúncios em shorts" : 
+            "BOLADAS"
+          }
           rightElement={isSell ? (
             <button 
               onClick={() => {
@@ -211,6 +231,8 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/following" element={<Following />} />
+            <Route path="/discover" element={<DiscoverUsers />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/chat/:chatId" element={<ChatDetail />} />
             <Route path="/alerts" element={<Alerts />} />
@@ -233,7 +255,7 @@ function AppContent() {
       <VideoCallOverlay />
       <PwaInstallPrompt />
 
-      {!isProductDetail && !isAuthPage && !isShortPlayer && !isSellCamera && !isSellDetails && !isChat && !isChatDetail && !isSearch && <BottomNav />}
+      {!isProductDetail && !isAuthPage && !isShortPlayer && !isSellCamera && !isSellDetails && !isChatDetail && !isSearch && <BottomNav />}
     </div>
   );
 }

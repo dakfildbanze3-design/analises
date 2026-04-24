@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, Search, ShoppingCart, ArrowLeft, Share2, MoreVertical, Settings, MessageCircle, Bug, X } from 'lucide-react';
+import { Menu, Search, ShoppingCart, ArrowLeft, Share2, MoreVertical, Settings, MessageCircle, Bug, X, Bell } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -40,14 +40,14 @@ export default function TopBar({ showBack, title = "BOLADAS", rightElement }: To
 
   return (
     <>
-      <header className="fixed top-0 w-full z-50 bg-black flex justify-between items-center px-4 h-12 border-b border-white/5">
+      <header className="fixed top-0 w-full z-50 glossy-black flex justify-between items-center px-4 h-12">
         <div className="flex items-center gap-4">
           {showBack ? (
             <button 
               onClick={handleBack}
               className="text-on-surface hover:bg-surface-container-highest transition-colors p-1 rounded active:scale-95"
             >
-              <ArrowLeft size={20} strokeWidth={3} />
+              <ArrowLeft size={20} strokeWidth={4} />
             </button>
           ) : (
             <button 
@@ -58,7 +58,11 @@ export default function TopBar({ showBack, title = "BOLADAS", rightElement }: To
             </button>
           )}
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-            <h1 className="text-lg font-black text-white uppercase tracking-tighter">
+            <h1 className={`font-black text-white tracking-tighter ${
+              title === "Notificações" || title === "Anúncios em shorts" 
+                ? "text-[20px]" 
+                : "text-lg uppercase"
+            }`}>
               {title}
             </h1>
           </div>
@@ -69,12 +73,20 @@ export default function TopBar({ showBack, title = "BOLADAS", rightElement }: To
           ) : (
             <>
               {location.pathname === '/' && (
-                <button 
-                  onClick={() => navigate('/search')}
-                  className="text-on-surface hover:bg-surface-container-highest transition-colors p-1 rounded active:scale-95 transition-all"
-                >
-                  <Search size={20} strokeWidth={3} />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button 
+                    onClick={() => navigate('/alerts')}
+                    className="text-on-surface hover:bg-surface-container-highest transition-colors p-1 rounded active:scale-95 transition-all"
+                  >
+                    <Bell size={20} strokeWidth={3} />
+                  </button>
+                  <button 
+                    onClick={() => navigate('/search')}
+                    className="text-on-surface hover:bg-surface-container-highest transition-colors p-1 rounded active:scale-95 transition-all"
+                  >
+                    <Search size={20} strokeWidth={3} />
+                  </button>
+                </div>
               )}
               {showBack && (
                 <>

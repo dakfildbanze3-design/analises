@@ -83,27 +83,20 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-black flex flex-col pt-safe">
-      {/* Header with Search Bar */}
-      <div className="bg-zinc-900/50 backdrop-blur-md px-4 py-3 border-b border-white/5 flex items-center gap-3 sticky top-0 z-50">
-        <button 
-          onClick={() => navigate(-1)}
-          className="text-white p-1 hover:bg-white/5 rounded-full transition-colors"
-        >
-          <ArrowLeft size={24} />
-        </button>
-        
+      {/* Search Bar sticky (Back button removed to rely on TopBar) */}
+      <div className="bg-zinc-900/50 backdrop-blur-md px-4 py-3 flex items-center gap-3 sticky top-0 z-40">
         <form 
           onSubmit={handleSearch}
-          className="flex-1 bg-zinc-800 rounded-full flex items-center px-4 py-2 relative"
+          className="flex-1 bg-zinc-800 rounded-[3px] flex items-center px-4 py-1.5 relative"
         >
-          <SearchIcon size={18} className="text-zinc-500 shrink-0" />
+          <SearchIcon size={14} className="text-zinc-500 shrink-0" />
           <input 
             ref={inputRef}
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="O que procuras hoje?"
-            className="w-full bg-transparent border-none outline-none text-white text-sm ml-3 placeholder:text-zinc-500"
+            className="w-full bg-transparent border-none outline-none text-white text-xs ml-3 placeholder:text-zinc-500"
           />
           {searchQuery && (
             <button 
@@ -181,7 +174,7 @@ export default function SearchPage() {
                     <button 
                       key={tag}
                       onClick={() => handleHistoryClick(tag)}
-                      className="px-4 py-2 bg-zinc-900 border border-white/5 rounded-full text-xs font-bold text-white hover:bg-zinc-800 transition-colors active:scale-95"
+                      className="px-4 py-2 bg-zinc-900 border border-white/5 rounded-[3px] text-xs font-bold text-white hover:bg-zinc-800 transition-colors active:scale-95"
                     >
                       {tag}
                     </button>
@@ -196,7 +189,7 @@ export default function SearchPage() {
               animate={{ opacity: 1 }}
               className="py-6 space-y-6"
             >
-              <div className="flex items-center justify-between border-b border-white/5 pb-4">
+              <div className="flex items-center justify-between pb-4">
                 <h2 className="text-sm font-black text-white uppercase tracking-tight italic">Resultados para "{searchQuery}"</h2>
                 <span className="text-xs text-zinc-500 font-bold">{results.length} itens</span>
               </div>
@@ -217,7 +210,7 @@ export default function SearchPage() {
                           <motion.div 
                             key={user.id} 
                             onClick={() => navigate(`/user/${user.id}`)}
-                            className="flex items-center justify-between p-3 bg-zinc-900/50 rounded-2xl border border-white/5 active:scale-[0.98] transition-all"
+                            className="flex items-center justify-between p-3 bg-zinc-900/50 rounded-[10px] border border-white/5 active:scale-[0.98] transition-all"
                           >
                             <div className="flex items-center gap-3">
                               <div className="w-12 h-12 rounded-full overflow-hidden bg-zinc-800 border border-white/10">
@@ -257,7 +250,7 @@ export default function SearchPage() {
                             onClick={() => navigate(product.productType === 'short' ? `/short/${product.id}` : `/product/${product.id}`)}
                             className="group cursor-pointer"
                           >
-                            <div className="aspect-square bg-zinc-900 rounded-2xl overflow-hidden relative border border-white/5">
+                            <div className="aspect-square bg-zinc-900 rounded-[10px] overflow-hidden relative border border-white/5">
                               <img 
                                 src={product.image || product.images?.[0]} 
                                 alt={product.name}
@@ -310,7 +303,7 @@ export default function SearchPage() {
                         <button 
                           key={tag}
                           onClick={() => handleHistoryClick(tag)}
-                          className="px-4 py-2 bg-zinc-900 border border-white/5 rounded-full text-xs font-bold text-white hover:bg-zinc-800 transition-colors active:scale-95"
+                          className="px-4 py-2 bg-zinc-900 border border-white/5 rounded-[3px] text-xs font-bold text-white hover:bg-zinc-800 transition-colors active:scale-95"
                         >
                           {tag}
                         </button>
