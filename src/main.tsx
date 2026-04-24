@@ -51,6 +51,8 @@ async function seedYoutubeVideos() {
 
 seedYoutubeVideos();
 
+console.log("Main.tsx initialization started");
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

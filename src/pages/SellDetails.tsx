@@ -58,6 +58,10 @@ export default function SellDetails() {
 
     setIsSubmitting(true);
     try {
+      if (!supabase) {
+        throw new Error('Serviço de armazenamento (Supabase) não configurado. Adicione VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY nas configurações.');
+      }
+
       let finalVideoUrl = videoUrl;
       let finalImages = [...images];
       

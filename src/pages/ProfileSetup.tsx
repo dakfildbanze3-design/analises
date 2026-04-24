@@ -45,6 +45,9 @@ export default function ProfileSetup() {
 
     setIsUploading(true);
     try {
+      if (!supabase) {
+        throw new Error('Serviço de upload não configurado. Adicione as chaves Supabase.');
+      }
       const fileExt = file.name.split('.').pop();
       // Simplify filename to avoid folder structure issues with RLS
       const fileName = `avatar-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;

@@ -48,6 +48,9 @@ const PersonalInfo: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     if (!file || !auth.currentUser) return;
     setUploading(true);
     try {
+      if (!supabase) {
+        throw new Error('Serviço de upload não configurado. Adicione VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY nas configurações.');
+      }
       const fileExt = file.name.split('.').pop();
       const fileName = `avatar-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const { error: uploadError } = await supabase.storage

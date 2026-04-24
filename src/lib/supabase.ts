@@ -9,7 +9,7 @@ try {
   if (supabaseUrl && supabaseAnonKey) {
     supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
   } else {
-    console.warn('Supabase credentials missing. Some features will be disabled.');
+    console.warn('Supabase credentials missing (VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY). Storage features will be disabled.');
   }
 } catch (err) {
   console.error('Failed to initialize Supabase:', err);

@@ -34,49 +34,63 @@ const PageLoader = () => (
 );
 
 // Error Boundary Component
-interface ErrorBoundaryProps {
-  children: ReactNode;
-}
-
-interface ErrorBoundaryState {
-  hasError: boolean;
-  error: any;
-}
-
-class ErrorBoundary extends (Component as any) {
+class ErrorBoundary extends Component<any, any> {
   constructor(props: any) {
     super(props);
+    // @ts-ignore
     this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(error: any): ErrorBoundaryState {
+  static getDerivedStateFromError(error: any) {
     return { hasError: true, error };
   }
 
   componentDidCatch(error: any, errorInfo: any) {
-    console.error("Critical Render Error:", error, errorInfo);
+    console.error("Critical Catch:", error, errorInfo);
   }
 
   render() {
+    // @ts-ignore
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#131313] text-white p-8 flex flex-col items-center justify-center text-center">
-          <h1 className="text-xl font-bold mb-4">Ups! Algo correu mal.</h1>
-          <p className="text-sm opacity-60 mb-6 max-w-xs">
-            A aplicação encontrou um erro inesperado. Tenta recarregar a página.
+        <div style={{
+          height: '100vh',
+          backgroundColor: '#131313',
+          color: 'white',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          padding: '20px',
+          fontFamily: 'sans-serif'
+        }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px' }}>Ups! Algo falhou.</h1>
+          <p style={{ fontSize: '14px', opacity: 0.7, marginBottom: '24px' }}>
+            A aplicação encontrou um problema técnico.
           </p>
           <button 
             onClick={() => window.location.reload()}
-            className="bg-blue-900 px-6 py-3 rounded-full font-bold text-sm uppercase tracking-widest"
+            style={{
+              backgroundColor: '#1e3a8a',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '999px',
+              fontWeight: 'bold',
+              cursor: 'pointer'
+            }}
           >
-            Recarregar
+            Recarregar App
           </button>
-          <div className="mt-8 p-4 bg-black/20 rounded text-[10px] text-left overflow-auto max-w-full">
-            <code>{this.state.error?.toString()}</code>
-          </div>
+          <pre style={{ marginTop: '30px', fontSize: '10px', opacity: 0.5, maxWidth: '100%', overflow: 'auto' }}>
+            {/* @ts-ignore */}
+            {this.state.error?.message || String(this.state.error)}
+          </pre>
         </div>
       );
     }
+    // @ts-ignore
     return this.props.children;
   }
 }
@@ -87,6 +101,17 @@ function AppContent() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showSplash, setShowSplash] = useState(true);
+
+  // Safety Timeout: Force-disable loading state after 8 seconds if Firebase/Auth is slow/stuck
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading) {
+        console.warn("Auth timeout reached. Proceeding to main app.");
+        setLoading(false);
+      }
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   // Presence Tracking Hook
   useEffect(() => {

@@ -48,6 +48,8 @@ if (supabaseUrl && supabaseAnonKey) {
   } catch (err) {
     console.error('Failed to initialize Supabase in firebase lib:', err);
   }
+} else {
+  console.warn('Supabase credentials missing (VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY). Storage features will be disabled.');
 }
 
 export const supabase = supabaseInstance;
