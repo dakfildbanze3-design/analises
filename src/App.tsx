@@ -7,6 +7,8 @@ import SplashScreen from './components/SplashScreen';
 import PwaInstallPrompt from './components/PwaInstallPrompt';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './lib/firebase';
+import { queryClient } from './lib/queryClient';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { notificationService } from './services/notificationService';
 
 // Lazy loading components for faster initial load
@@ -176,6 +178,9 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
+    // Persistent state: Save last page visited
+    localStorage.setItem('lastPath', location.pathname);
+
     if (loading || showSplash) return;
 
     const isAuthPage = ['/login', '/register', '/profile-setup', '/onboarding', '/terms', '/privacy'].includes(location.pathname);
@@ -282,9 +287,11 @@ function AppContent() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <Router>
-        <AppContent />
-      </Router>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <AppContent />
+        </Router>
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 }

@@ -222,7 +222,7 @@ export default function SellDetails() {
   };
 
   return (
-    <form id="sell-details-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="bg-black min-h-screen text-white pt-16 pb-36">
+    <div id="sell-details-form" className="bg-black min-h-screen text-white pt-16 pb-36">
       {/* Media Preview and Title Section */}
       <section className="px-4 flex gap-4 mb-8">
         <div 
@@ -373,7 +373,8 @@ export default function SellDetails() {
       {/* Bottom Button */}
       <div className="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black to-transparent z-50">
         <button 
-          type="submit"
+          type="button"
+          onClick={handleSubmit}
           disabled={isSubmitting}
           className="w-full bg-white text-black py-4 rounded-full font-bold text-[0.9375rem] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-[0_0_40px_rgba(255,255,255,0.2)] disabled:opacity-80"
         >
@@ -408,7 +409,7 @@ export default function SellDetails() {
           </motion.div>
         )}
       </AnimatePresence>
-    </form>
+    </div>
   );
 }
 

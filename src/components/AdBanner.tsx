@@ -21,21 +21,42 @@ export default function AdBanner({
   const adRef = useRef<HTMLModElement>(null);
   
   useEffect(() => {
-    // Small delay to ensure DOM is fully ready and avoid race conditions in React
-    const timeout = setTimeout(() => {
+    let observer: ResizeObserver | null = null;
+    
+    const initAd = () => {
       try {
-        // Check if the current ad element is already initialized or being processed
-        // AdSense adds data-adsbygoogle-status="done" once processed
         if (adRef.current && !adRef.current.hasAttribute('data-adsbygoogle-status')) {
-          // @ts-ignore
-          (window.adsbygoogle = window.adsbygoogle || []).push({});
+          const width = adRef.current.offsetWidth || (adRef.current.parentElement?.offsetWidth ?? 0);
+          if (width > 0) {
+            // @ts-ignore
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+            if (observer) observer.disconnect();
+          }
         }
       } catch (e) {
         console.error("AdSense error:", e);
       }
-    }, 100);
+    };
 
-    return () => clearTimeout(timeout);
+    // Small delay to ensure DOM is fully ready and avoid race conditions in React
+    const timeout = setTimeout(() => {
+      initAd();
+      
+      // Fallback: observe resizing in case width was initially 0
+      if (adRef.current && !adRef.current.hasAttribute('data-adsbygoogle-status')) {
+        observer = new ResizeObserver(() => {
+          if (adRef.current && adRef.current.offsetWidth > 0) {
+            initAd();
+          }
+        });
+        observer.observe(adRef.current);
+      }
+    }, 250);
+
+    return () => {
+      clearTimeout(timeout);
+      if (observer) observer.disconnect();
+    };
   }, [adSlot, adClient]);
 
   return (

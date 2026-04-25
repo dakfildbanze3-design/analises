@@ -3,7 +3,8 @@ import { Plus, SlidersHorizontal, MoreVertical, Flag, Share2, Star, Link, X, Loa
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { db, handleFirestoreError, OperationType, auth } from '../lib/firebase';
-import { collection, getDocs, query, orderBy, limit, startAfter, QueryDocumentSnapshot, where } from 'firebase/firestore';
+import { collection, doc, query, orderBy, limit, startAfter, QueryDocumentSnapshot, where, onSnapshot } from 'firebase/firestore';
+import { useOfflineCollection } from '../hooks/useSocialData';
 import { formatRelativeTime } from '../lib/dateUtils';
 import { shareContent } from '../lib/shareUtils';
 import { chatService } from '../services/chatService';
@@ -28,21 +29,50 @@ const sortOptions = [
 export default function Home() {
   const navigate = useNavigate();
   
+  // Filter & Pagination States
+  const [activeCategory, setActiveCategory] = useState<string>('TUDO');
+  const [activeSort, setActiveSort] = useState<SortOptionId>('recent');
+  
   // UI States
   const [activeOptionsId, setActiveOptionsId] = useState<string | null>(null);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   
-  // Data States
+  // Data States via Offline Hook
+  const orderOption = sortOptions.find(opt => opt.id === activeSort) || sortOptions[0];
+  const constraints = [];
+  if (activeCategory !== 'TUDO') {
+    const originalCategory = PRODUCT_CATEGORIES.find(c => c.toUpperCase() === activeCategory);
+    constraints.push(where('category', '==', originalCategory || activeCategory));
+  }
+  constraints.push(orderBy(orderOption.field, orderOption.dir as any));
+
+  const { data: rawProducts, loading } = useOfflineCollection('products', constraints, 100);
+
+  // Remaining States
   const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  
-  // Filter & Pagination States
-  const [activeCategory, setActiveCategory] = useState<string>('TUDO');
-  const [activeSort, setActiveSort] = useState<SortOptionId>('recent');
+  const [hasMore, setHasMore] = useState(false);
   const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot | null>(null);
-  const [hasMore, setHasMore] = useState(true);
+
+  useEffect(() => {
+    if (!rawProducts) return;
+    
+    let processed = rawProducts.map(data => ({
+      id: data.id,
+      ...data,
+      author: data.sellerName || 'Usuário',
+      avatar: data.sellerAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.sellerId}`,
+      time: data.createdAt ? formatRelativeTime(data.createdAt) : 'Agora',
+      views: data.views || 0,
+      likesCount: data.likesCount || (data.likedBy?.length || 0),
+      commentsCount: data.commentsCount || 0,
+      image: data.images && data.images.length > 0 ? data.images[0] : 'https://picsum.photos/seed/placeholder/800/800'
+    }));
+
+    // For a Facebook-like experience, we usually don't shuffle on every background update to avoid jarring UI jumps
+    setProducts(processed);
+  }, [rawProducts]);
 
   // Infinite Scroll Observer setup
   const observer = useRef<IntersectionObserver | null>(null);
@@ -52,7 +82,7 @@ export default function Home() {
     
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && hasMore) {
-        fetchProducts(true);
+        // fetchProducts(true); // Pagination will be handled by increasing limit or using different mechanism
       }
     });
     
@@ -81,83 +111,6 @@ export default function Home() {
       document.head.removeChild(script);
     };
   }, []);
-
-  const fetchProducts = async (isLoadMore = false) => {
-    // Fetch products based on category and sort order
-    if (isLoadMore) {
-      setLoadingMore(true);
-    } else {
-      setLoading(true);
-    }
-
-    try {
-      const orderOption = sortOptions.find(opt => opt.id === activeSort) || sortOptions[0];
-      const constraints: any[] = [];
-
-      // If filtering by category, note that combining 'where' with 'orderBy' on a different field 
-      // WILL require a composite index in Firestore!
-      if (activeCategory !== 'TUDO') {
-        const originalCategory = PRODUCT_CATEGORIES.find(c => c.toUpperCase() === activeCategory);
-        constraints.push(where('category', '==', originalCategory || activeCategory));
-      }
-
-      // Order By
-      constraints.push(orderBy(orderOption.field, orderOption.dir as any));
-
-      // Pagination
-      if (isLoadMore && lastVisible) {
-        constraints.push(startAfter(lastVisible));
-      }
-      
-      constraints.push(limit(40));
-
-      const q = query(collection(db, 'products'), ...constraints);
-      const querySnapshot = await getDocs(q);
-      
-      let newProducts = querySnapshot.docs.map(doc => {
-        const data = doc.data() as any;
-        return {
-          id: doc.id,
-          ...data,
-          author: data.sellerName || 'Usuário',
-          avatar: data.sellerAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.sellerId}`,
-          time: data.createdAt ? formatRelativeTime(data.createdAt) : 'Agora',
-          views: data.views || 0,
-          likesCount: data.likesCount || (data.likedBy?.length || 0),
-          commentsCount: data.commentsCount || 0,
-          image: data.images && data.images.length > 0 ? data.images[0] : 'https://picsum.photos/seed/placeholder/800/800'
-        };
-      });
-
-      // Randomize the incoming batch of products
-      for (let i = newProducts.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [newProducts[i], newProducts[j]] = [newProducts[j], newProducts[i]];
-      }
-
-      if (isLoadMore) {
-        setProducts(prev => [...prev, ...newProducts]);
-      } else {
-        setProducts(newProducts);
-      }
-
-      // Setup for next page (based on original order to ensure pagination works)
-      setLastVisible(querySnapshot.docs[querySnapshot.docs.length - 1] || null);
-      setHasMore(querySnapshot.docs.length === 40);
-
-    } catch (error) {
-      handleFirestoreError(error, OperationType.LIST, 'products');
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  };
-
-  // Re-fetch automatically when filters change
-  useEffect(() => {
-    fetchProducts(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeCategory, activeSort]);
 
   const closeOptions = () => setActiveOptionsId(null);
 
@@ -220,7 +173,7 @@ export default function Home() {
               <div 
                 key={`featured-${product.id}`}
                 onClick={() => navigate(`/short/${product.id}`)}
-                className="relative flex-shrink-0 w-[170px] h-[340px] rounded-[10px] overflow-hidden cursor-pointer group bg-surface-container shadow-sm"
+                className="relative flex-shrink-0 w-[calc(50vw-4px)] md:w-[170px] h-[340px] rounded-[10px] overflow-hidden cursor-pointer group bg-surface-container shadow-sm"
               >
                 {(() => {
                   if (!product.videoUrl) {
@@ -319,7 +272,7 @@ export default function Home() {
                             <div 
                               key={`interleaved-short-carousel-${videoProduct.id}`}
                               onClick={() => navigate(`/short/${videoProduct.id}`)}
-                              className="relative flex-shrink-0 w-[170px] h-[340px] rounded-[10px] overflow-hidden cursor-pointer group bg-surface-container shadow-sm"
+                              className="relative flex-shrink-0 w-[calc(50vw-4px)] md:w-[170px] h-[340px] rounded-[10px] overflow-hidden cursor-pointer group bg-surface-container shadow-sm"
                             >
                               {(() => {
                                 if (!videoProduct.videoUrl) {
