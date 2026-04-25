@@ -124,8 +124,8 @@ export default function SellDetails() {
           images: uploadedImages,
           productType: finalVideoUrl ? 'short' : 'physical',
           sellerId: auth.currentUser.uid,
-          sellerName: userData?.displayName || 'Usuário',
-          sellerAvatar: userData?.avatarUrl || null,
+          sellerName: userData?.displayName || auth.currentUser.displayName || 'Usuário',
+          sellerAvatar: userData?.avatarUrl || auth.currentUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${auth.currentUser.uid}`,
           createdAt: serverTimestamp()
         });
 
@@ -275,14 +275,14 @@ export default function SellDetails() {
       {/* User Info */}
       <section className="px-4 flex items-center gap-3 mb-8">
         <img 
-          src={userData?.avatarUrl || "https://picsum.photos/seed/user/100/100"} 
-          alt={userData?.displayName}
+          src={userData?.avatarUrl || auth.currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${auth.currentUser?.uid}`} 
+          alt={userData?.displayName || auth.currentUser?.displayName}
           className="w-10 h-10 rounded-full object-cover border border-white/10 shadow-sm"
           referrerPolicy="no-referrer"
         />
         <div className="flex flex-col">
-          <span className="text-[0.875rem] font-bold">{userData?.displayName || 'Usuário'}</span>
-          <span className="text-[0.75rem] text-zinc-500">@{userData?.handle || 'usuario-short'}</span>
+          <span className="text-[0.875rem] font-bold">{userData?.displayName || auth.currentUser?.displayName || 'Usuário'}</span>
+          <span className="text-[0.75rem] text-zinc-500">@{userData?.handle || auth.currentUser?.email?.split('@')[0] || 'usuario'}</span>
         </div>
       </section>
 
