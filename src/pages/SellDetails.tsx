@@ -171,7 +171,10 @@ export default function SellDetails() {
 
   const handleInputKeyDown = (e: React.KeyboardEvent, key: string) => {
     if (e.key === 'Enter') {
-      setActiveEditKey(null);
+      if (key !== 'description') {
+        e.preventDefault();
+        setActiveEditKey(null);
+      }
     }
   };
 
