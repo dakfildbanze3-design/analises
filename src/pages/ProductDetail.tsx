@@ -606,10 +606,10 @@ export default function ProductDetail() {
                  {auth.currentUser?.uid !== product.sellerId && (
                    <div className="flex gap-2 mt-2">
                      <button 
-                       onClick={() => window.open(`https://wa.me/${product.sellerPhone?.replace(/\D/g, '')}`, '_blank')}
+                       onClick={handleMessageClick}
                        className="flex-1 shiny-button h-[42px] flex items-center justify-center text-[0.75rem] font-black tracking-[0.2em] rounded-full text-white shadow-xl uppercase"
                      >
-                       CONTACTAR VENDEDOR
+                       MENSAGEM AO VENDEDOR
                      </button>
                    </div>
                  )}

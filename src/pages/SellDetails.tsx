@@ -246,8 +246,21 @@ export default function SellDetails() {
               className="w-full h-full object-cover"
               muted
               autoPlay
-              loop
+              loop={!videoMeta?.end}
               playsInline
+              onTimeUpdate={(e) => {
+                  if (videoMeta?.end && videoMeta.end > 0) {
+                      if (e.currentTarget.currentTime >= videoMeta.end) {
+                          e.currentTarget.currentTime = videoMeta.start || 0;
+                          e.currentTarget.play();
+                      }
+                  }
+              }}
+              onLoadedData={(e) => {
+                  if (videoMeta?.start && videoMeta.start > 0) {
+                      e.currentTarget.currentTime = videoMeta.start;
+                  }
+              }}
             />
           ) : images.length > 0 ? (
             renderImageGrid()

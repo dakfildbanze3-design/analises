@@ -400,25 +400,37 @@ export default function ShortPlayer() {
                    />
                 );
               }
-              return (
-                 <video 
-                   src={product.videoUrl} 
-                   className="w-full h-full object-contain"
-                   controls
-                   autoPlay
-                   loop={!product.trimEnd}
-                   playsInline
-                   muted={product.videoMuted}
-                   onTimeUpdate={(e) => {
-                      if (product.trimEnd && product.trimEnd > 0) {
-                          if (e.currentTarget.currentTime >= product.trimEnd) {
-                              e.currentTarget.currentTime = product.trimStart || 0;
-                              e.currentTarget.play();
+              const InlineVideoPlayer = () => {
+                  const vRef = React.useRef<HTMLVideoElement>(null);
+                  React.useEffect(() => {
+                      if (!vRef.current || !product.trimEnd) return;
+                      const v = vRef.current;
+                      let frameId: number;
+                      if (product.trimStart) v.currentTime = product.trimStart;
+                      const loopCheck = () => {
+                          if (v.currentTime >= product.trimEnd) {
+                              v.currentTime = product.trimStart || 0;
+                              v.play().catch(()=>{});
                           }
-                      }
-                   }}
-                 />
-              );
+                          frameId = requestAnimationFrame(loopCheck);
+                      };
+                      frameId = requestAnimationFrame(loopCheck);
+                      return () => cancelAnimationFrame(frameId);
+                  }, []);
+                  return (
+                     <video 
+                       ref={vRef}
+                       src={product.videoUrl} 
+                       className="w-full h-full object-contain"
+                       controls={!product.trimEnd}
+                       autoPlay
+                       loop={!product.trimEnd}
+                       playsInline
+                       muted={product.videoMuted}
+                     />
+                  );
+              };
+              return <InlineVideoPlayer />;
            })()
         ) : (
             <div className="w-full h-full flex items-center justify-center">
@@ -640,18 +652,10 @@ export default function ShortPlayer() {
          {auth.currentUser?.uid !== product?.sellerId && (
            <div className="flex items-center gap-2 mt-6 pt-6 border-t border-white/10">
             <button 
-                onClick={() => {
-                   const phoneStr = product?.sellerPhone || '';
-                   const cleanPhone = phoneStr.replace(/\D/g, '');
-                   if (cleanPhone) {
-                       window.open(`https://wa.me/${cleanPhone}`, '_blank');
-                   } else {
-                       alert('O vendedor não disponibilizou número de WhatsApp.');
-                   }
-                }}
+                onClick={handleMessageClick}
                 className="flex items-center gap-2 px-6 h-12 shiny-button rounded-full flex-1 justify-center shadow-2xl text-white font-black text-[0.875rem] tracking-[0.2em] uppercase"
             >
-               CONTACTAR VENDEDOR
+               MENSAGEM AO VENDEDOR
             </button>
          </div>
          )}

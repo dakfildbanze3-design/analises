@@ -50,19 +50,25 @@ export default function MediaEditor({ media, onCancel, onComplete }: MediaEditor
         setDuration(vid.duration);
         setTrimEnd(vid.duration);
       };
-      const onTimeUpdate = () => {
+      
+      let animationFrameId: number;
+      
+      const checkTime = () => {
         if (activeTabVideo === 'trim') {
             if (vid.currentTime >= trimEnd) {
                 vid.currentTime = trimStart;
-                vid.play();
+                vid.play().catch(()=>{});
             }
         }
+        animationFrameId = requestAnimationFrame(checkTime);
       };
+      
       vid.addEventListener('loadedmetadata', onLoadedMeta);
-      vid.addEventListener('timeupdate', onTimeUpdate);
+      animationFrameId = requestAnimationFrame(checkTime);
+      
       return () => {
         vid.removeEventListener('loadedmetadata', onLoadedMeta);
-        vid.removeEventListener('timeupdate', onTimeUpdate);
+        cancelAnimationFrame(animationFrameId);
       };
     }
   }, [media.type, trimStart, trimEnd, activeTabVideo]);
@@ -156,7 +162,7 @@ export default function MediaEditor({ media, onCancel, onComplete }: MediaEditor
         <button 
           onClick={handleFinish} 
           disabled={isProcessing}
-          className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-full font-bold active:scale-95 transition-all disabled:opacity-50 border border-blue-500 shadow-lg shadow-blue-600/20"
+          className="flex items-center gap-2 bg-white text-black px-5 py-2 rounded-full font-bold active:scale-95 transition-all disabled:opacity-50 border border-white shadow-lg shadow-white/20"
         >
           <span className="text-[0.75rem] uppercase tracking-wider">{isProcessing ? 'A Guardar' : 'Concluir'}</span>
           {!isProcessing && <Check size={18} strokeWidth={3} />}
@@ -203,9 +209,9 @@ export default function MediaEditor({ media, onCancel, onComplete }: MediaEditor
                />
                {activeTabVideo === 'thumb' && (
                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 pointer-events-none">
-                    <div className="border-[2px] border-amber-400 w-[70%] aspect-[9/16] rounded-xl flex flex-col items-center justify-center shadow-2xl">
-                      <ImageIcon size={32} className="text-amber-400 mb-2 opacity-80" />
-                      <span className="text-amber-400 text-[0.65rem] bg-black/80 px-4 py-1.5 rounded-full font-bold uppercase tracking-widest backdrop-blur-md">Capa do Anúncio</span>
+                    <div className="border-[2px] border-white w-[70%] aspect-[9/16] rounded-xl flex flex-col items-center justify-center shadow-2xl">
+                      <ImageIcon size={32} className="text-white mb-2 opacity-80" />
+                      <span className="text-black text-[0.65rem] bg-white px-4 py-1.5 rounded-full font-bold uppercase tracking-widest shadow-md">Capa do Anúncio</span>
                     </div>
                  </div>
                )}
@@ -234,7 +240,7 @@ export default function MediaEditor({ media, onCancel, onComplete }: MediaEditor
                        <input 
                          type="range" min="1" max="3" step="0.05" value={zoom} 
                          onChange={(e) => setZoom(Number(e.target.value))} 
-                         className="w-full h-1 appearance-none bg-white/20 rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:rounded-full" 
+                         className="w-full h-1 appearance-none bg-white/20 rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full" 
                        />
                     </div>
                  </div>
@@ -272,10 +278,10 @@ export default function MediaEditor({ media, onCancel, onComplete }: MediaEditor
                         onClick={() => setPreset(key)}
                         className={`flex flex-col items-center gap-2 transition-all flex-shrink-0 ${preset === key ? 'scale-110 opacity-100' : 'opacity-50 hover:opacity-80'}`}
                       >
-                         <div className={`w-14 h-14 rounded-full overflow-hidden border-[3px] ${preset === key ? 'border-blue-500' : 'border-transparent'}`}>
-                             <div className="w-full h-full bg-gradient-to-tr from-blue-400 to-amber-500" style={{ filter: FILTER_PRESETS[key].css }} />
+                         <div className={`w-14 h-14 rounded-full overflow-hidden border-[3px] ${preset === key ? 'border-white' : 'border-transparent'}`}>
+                             <div className="w-full h-full bg-gradient-to-tr from-white/40 to-white/10" style={{ filter: FILTER_PRESETS[key].css }} />
                          </div>
-                         <span className={`text-[0.6rem] font-bold uppercase tracking-wider ${preset === key ? 'text-blue-400' : 'text-white'}`}>
+                         <span className={`text-[0.6rem] font-bold uppercase tracking-wider ${preset === key ? 'text-white' : 'text-zinc-500'}`}>
                             {FILTER_PRESETS[key].label}
                          </span>
                       </button>
@@ -291,45 +297,64 @@ export default function MediaEditor({ media, onCancel, onComplete }: MediaEditor
                {activeTabVideo === 'trim' && duration > 0 && (
                  <div className="w-full max-w-md flex flex-col gap-4 px-4">
                     <div className="w-full flex justify-between items-center text-white/50 text-[0.65rem] font-bold tracking-widest px-2">
-                      <span className="bg-white/10 px-3 py-1 rounded-full text-white">{Math.floor(trimStart)}s</span>
+                      <span className="bg-white/10 px-3 py-1 rounded-full text-white">{trimStart.toFixed(1)}s</span>
                       <span className="uppercase text-[0.55rem]">{(trimEnd - trimStart).toFixed(1)}s selecionados</span>
-                      <span className="bg-white/10 px-3 py-1 rounded-full text-white">{Math.floor(trimEnd)}s</span>
+                      <span className="bg-white/10 px-3 py-1 rounded-full text-white">{trimEnd.toFixed(1)}s</span>
                     </div>
 
-                    <div className="relative w-full h-8 bg-zinc-800 rounded-xl overflow-hidden border border-white/10 flex items-center">
+                    <div 
+                      className="relative w-full h-12 bg-zinc-900 rounded-lg border border-white/10 flex items-center touch-none select-none"
+                      onPointerDown={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const percentage = x / rect.width;
+                        const time = percentage * duration;
+                        
+                        // Decide which thumb is closer
+                        if (Math.abs(time - trimStart) < Math.abs(time - trimEnd)) {
+                           if (time < trimEnd - 0.5) setTrimStart(Math.max(0, time));
+                        } else {
+                           if (time > trimStart + 0.5) setTrimEnd(Math.min(duration, time));
+                        }
+                      }}
+                      onPointerMove={(e) => {
+                         if (e.buttons !== 1) return;
+                         const rect = e.currentTarget.getBoundingClientRect();
+                         const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+                         const percentage = x / rect.width;
+                         const time = percentage * duration;
+                         
+                         if (Math.abs(time - trimStart) < Math.abs(time - trimEnd)) {
+                             if (time < trimEnd - 0.5) {
+                                 setTrimStart(time);
+                                 if (videoRef.current) videoRef.current.currentTime = time;
+                             }
+                         } else {
+                             if (time > trimStart + 0.5) {
+                                 setTrimEnd(time);
+                             }
+                         }
+                      }}
+                    >
                        {/* Background Track */}
                        <div className="absolute inset-0 bg-white/5 pointer-events-none" />
                        
                        {/* Highlighted Window */}
                        <div 
-                         className="absolute top-0 bottom-0 bg-blue-500/30 border-y-2 border-blue-500 pointer-events-none" 
+                         className="absolute top-0 bottom-0 bg-white/20 border-y-2 border-white pointer-events-none" 
                          style={{ 
                             left: `${(trimStart / duration) * 100}%`, 
                             right: `${100 - (trimEnd / duration) * 100}%` 
                          }} 
                        />
 
-                       {/* Invisible Inputs Overlaid */}
-                       <input 
-                          type="range" min="0" max={duration} step="0.1" value={trimStart} 
-                          onChange={(e) => {
-                             const val = Number(e.target.value);
-                             if(val < trimEnd - 0.5) { setTrimStart(val); if(videoRef.current) videoRef.current.currentTime = val; }
-                          }} 
-                          className="absolute w-full h-full opacity-0 cursor-pointer pointer-events-auto" 
-                       />
-                       <input 
-                          type="range" min="0" max={duration} step="0.1" value={trimEnd} 
-                          onChange={(e) => {
-                             const val = Number(e.target.value);
-                             if(val > trimStart + 0.5) setTrimEnd(val); 
-                          }} 
-                          className="absolute w-full h-full opacity-0 cursor-pointer pointer-events-auto" 
-                       />
-
                        {/* Custom Drag Handles (Visual Only) */}
-                       <div className="absolute top-0 bottom-0 w-2 bg-white rounded-full shadow-lg pointer-events-none -ml-1 border border-zinc-300" style={{ left: `${(trimStart / duration) * 100}%` }} />
-                       <div className="absolute top-0 bottom-0 w-2 bg-white rounded-full shadow-lg pointer-events-none -mr-1 border border-zinc-300" style={{ right: `${100 - (trimEnd / duration) * 100}%` }} />
+                       <div className="absolute top-0 bottom-0 w-3 bg-white rounded-md shadow-lg pointer-events-none -ml-1.5 flex items-center justify-center border border-zinc-300" style={{ left: `${(trimStart / duration) * 100}%` }}>
+                          <div className="w-0.5 h-4 bg-zinc-400 rounded-full" />
+                       </div>
+                       <div className="absolute top-0 bottom-0 w-3 bg-white rounded-md shadow-lg pointer-events-none -mr-1.5 flex items-center justify-center border border-zinc-300" style={{ right: `${100 - (trimEnd / duration) * 100}%` }}>
+                          <div className="w-0.5 h-4 bg-zinc-400 rounded-full" />
+                       </div>
                     </div>
                  </div>
                )}
@@ -344,12 +369,12 @@ export default function MediaEditor({ media, onCancel, onComplete }: MediaEditor
                )}
                {activeTabVideo === 'thumb' && duration > 0 && (
                  <div className="w-full max-w-md flex flex-col items-center gap-4 px-4">
-                    <div className="text-amber-400 text-[0.65rem] font-bold uppercase tracking-widest whitespace-nowrap bg-amber-400/10 px-4 py-1.5 rounded-full border border-amber-400/20">
+                    <div className="text-white text-[0.65rem] font-bold uppercase tracking-widest whitespace-nowrap bg-white/10 px-4 py-1.5 rounded-full border border-white/20">
                       Deslize para Escolher a Capa do Anúncio
                     </div>
-                    <div className="relative w-full h-8 flex items-center">
-                      <div className="w-full h-2 bg-zinc-800 rounded-full border border-white/5 overflow-hidden">
-                        <div className="h-full bg-amber-500/30" style={{ width: `${(thumbTime / duration) * 100}%` }} />
+                    <div className="relative w-full h-10 flex items-center touch-none select-none">
+                      <div className="w-full h-3 bg-zinc-800 rounded-full border border-white/5 overflow-hidden">
+                        <div className="h-full bg-white/30" style={{ width: `${(thumbTime / duration) * 100}%` }} />
                       </div>
                       <input 
                         type="range" min="0" max={duration} step="0.1" value={thumbTime} 
@@ -358,11 +383,11 @@ export default function MediaEditor({ media, onCancel, onComplete }: MediaEditor
                            setThumbTime(val); 
                            if (videoRef.current) { videoRef.current.currentTime = val; videoRef.current.pause(); }
                         }} 
-                        className="absolute w-full h-full opacity-0 cursor-pointer" 
+                        className="absolute w-full h-full opacity-0 cursor-pointer pointer-events-auto" 
                       />
                       {/* Custom Handle */}
-                      <div className="absolute w-4 h-6 bg-amber-400 rounded-md shadow-[0_0_10px_rgba(251,191,36,0.5)] pointer-events-none -ml-2 flex items-center justify-center" style={{ left: `${(thumbTime / duration) * 100}%` }}>
-                         <div className="w-0.5 h-3 bg-black/40 rounded-full" />
+                      <div className="absolute w-5 h-7 bg-white rounded-md shadow-lg pointer-events-none -ml-2.5 flex items-center justify-center border border-zinc-300" style={{ left: `${(thumbTime / duration) * 100}%` }}>
+                         <div className="w-0.5 h-4 bg-zinc-400 rounded-full" />
                       </div>
                     </div>
                  </div>
@@ -398,7 +423,7 @@ function TabBtn({ icon, label, active, onClick }: { icon: React.ReactNode, label
       onClick={onClick}
       className={`flex flex-col items-center gap-2 transition-all w-[72px] rounded-xl py-2 ${active ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
     >
-      <div className={`p-0 transition-colors ${active ? 'text-blue-500 scale-110 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-transparent text-zinc-500'}`}>
+      <div className={`p-0 transition-colors ${active ? 'text-white scale-110 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'bg-transparent text-zinc-500'}`}>
          {React.cloneElement(icon as React.ReactElement, { size: 24, strokeWidth: active ? 2.5 : 2 })}
       </div>
       <span className={`text-[0.65rem] font-bold tracking-widest uppercase ${active ? 'text-white opacity-100' : 'opacity-60'}`}>{label}</span>
