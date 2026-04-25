@@ -47,15 +47,6 @@ export default function SellDetails() {
       alert('Deves estar logado para publicar.');
       return;
     }
-    if (!videoUrl && images.length === 0) {
-      alert('Por favor, selecione um vídeo ou fotos para este anúncio.');
-      return;
-    }
-    if (!price || !category || !phone) {
-      alert('Por favor, preencha o preço, categoria e telefone.');
-      return;
-    }
-
     setIsSubmitting(true);
     try {
       if (!supabase) {

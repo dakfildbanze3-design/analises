@@ -22,12 +22,8 @@ export default function SplashScreen({ onFinish, isReady }: SplashScreenProps) {
   useEffect(() => {
     // Only hide splash when both minimum time has passed AND app is ready
     if (minTimeExpired && isReady) {
-      const exitTimer = setTimeout(() => {
-        setIsVisible(false);
-        // Wait for exit animation to start, then signal finish immediately to avoid blank screen
-        onFinish();
-      }, 500);
-      return () => clearTimeout(exitTimer);
+      setIsVisible(false);
+      onFinish();
     }
   }, [minTimeExpired, isReady, onFinish]);
 

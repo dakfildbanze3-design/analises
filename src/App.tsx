@@ -108,14 +108,19 @@ function AppContent() {
   const [loading, setLoading] = useState(true);
   const [showSplash, setShowSplash] = useState(true);
 
-  // Safety Timeout: Force-disable loading state after 8 seconds if Firebase/Auth is slow/stuck
+  const handleSplashFinish = React.useCallback(() => {
+    setShowSplash(false);
+  }, []);
+
+  // Safety Timeout: Force-disable loading state safely
   useEffect(() => {
     const timer = setTimeout(() => {
       if (loading) {
         console.warn("Auth timeout reached. Proceeding to main app.");
         setLoading(false);
       }
-    }, 8000);
+      setShowSplash(false);
+    }, 4000);
     return () => clearTimeout(timer);
   }, [loading]);
 
@@ -148,22 +153,12 @@ function AppContent() {
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(
-      (user) => {
-        setUser(user);
+      (currentUser) => {
+        setUser(currentUser);
         setLoading(false);
         
-        if (user) {
-          notificationService.saveFCMToken(user.uid);
-        }
-
-        const isAuthPage = ['/login', '/register', '/profile-setup', '/onboarding', '/terms', '/privacy'].includes(location.pathname);
-        
-        if (user && ['/login', '/register', '/onboarding'].includes(location.pathname)) {
-          navigate('/');
-        }
-
-        if (!user && !isAuthPage && !showSplash) {
-          navigate('/onboarding');
+        if (currentUser) {
+          notificationService.saveFCMToken(currentUser.uid);
         }
       },
       (error) => {
@@ -178,7 +173,19 @@ function AppContent() {
       }
     );
     return () => unsubscribe();
-  }, [location.pathname, navigate, showSplash]);
+  }, []);
+
+  useEffect(() => {
+    if (loading || showSplash) return;
+
+    const isAuthPage = ['/login', '/register', '/profile-setup', '/onboarding', '/terms', '/privacy'].includes(location.pathname);
+    
+    if (user && ['/login', '/register', '/onboarding'].includes(location.pathname)) {
+      navigate('/');
+    } else if (!user && !isAuthPage) {
+      navigate('/onboarding');
+    }
+  }, [user, loading, showSplash, location.pathname, navigate]);
 
   const isProductDetail = location.pathname.startsWith('/product/');
   const isPublicProfile = location.pathname.startsWith('/user/');
@@ -198,7 +205,7 @@ function AppContent() {
 
   // Use SplashScreen to cover both the fixed timer and the firebase auth loading
   if (showSplash || loading) {
-    return <SplashScreen onFinish={() => setShowSplash(false)} isReady={!loading} />;
+    return <SplashScreen onFinish={handleSplashFinish} isReady={!loading} />;
   }
 
   return (

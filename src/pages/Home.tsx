@@ -545,8 +545,7 @@ export default function Home() {
 
                     {/* Show Ad after every 4th product */}
                     {(index + 1) % 4 === 0 && (index + 1) % 8 !== 0 && (
-                      <div className="px-1 py-1 mt-1 bg-background">
-                        <div className="px-2 py-1 text-[0.875rem] font-black text-white/40 uppercase tracking-widest">Anúncio</div>
+                      <div className="w-full">
                         <AdBanner />
                       </div>
                     )}

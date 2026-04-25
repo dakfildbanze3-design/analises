@@ -39,12 +39,12 @@ export default function AdBanner({
   }, [adSlot, adClient]);
 
   return (
-    <div className={`my-4 overflow-hidden rounded-xl bg-zinc-900/50 border border-white/5 ${className}`}>
-      <div className="p-2 border-b border-white/5 flex justify-between items-center bg-zinc-900">
+    <div className={`my-4 overflow-hidden bg-background ${className}`}>
+      <div className="p-2 flex justify-between items-center">
         <span className="text-[0.6rem] font-bold text-zinc-500 uppercase tracking-widest">Patrocinado</span>
-        <span className="text-[0.6rem] text-zinc-600 px-1.5 py-0.5 border border-zinc-700 rounded-sm">AD</span>
+        <span className="text-[0.6rem] text-zinc-600 px-1.5 py-0.5 border border-zinc-800 rounded-sm">AD</span>
       </div>
-      <div className="flex items-center justify-center min-h-[100px] relative bg-zinc-950/50">
+      <div className="flex items-center justify-center min-h-[100px] relative bg-background">
         {useImageBackground && <img src="/logo.png" alt="AD" className="absolute inset-0 w-full h-full object-cover opacity-20 blur-[2px]" />}
         {/* Google AdSense / AdMob Tag */}
         <ins 
