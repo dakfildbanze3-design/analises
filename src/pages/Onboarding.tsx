@@ -1,140 +1,163 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Video, MessageSquare, ShieldCheck, ChevronRight, ArrowRight } from 'lucide-react';
-
-const steps = [
-  {
-    title: "Bem-vindo ao Bazar",
-    description: "A maior plataforma de compra e venda em Moçambique, agora com vídeos curtos para uma experiência real.",
-    icon: <ShoppingBag className="w-12 h-12 text-primary" />,
-    image: "https://images.unsplash.com/photo-1472851294608-062f824d29cc?q=80&w=1000&auto=format&fit=crop"
-  },
-  {
-    title: "Veja antes de comprar",
-    description: "Assista a vídeos reais dos produtos (Shorts). Nada de surpresas desagradáveis, veja cada detalhe em movimento.",
-    icon: <Video className="w-12 h-12 text-primary" />,
-    image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1000&auto=format&fit=crop"
-  },
-  {
-    title: "Negocie Direto",
-    description: "Converse diretamente com o vendedor via chat ou WhatsApp. Segurança e rapidez nas suas mãos.",
-    icon: <MessageSquare className="w-12 h-12 text-primary" />,
-    image: "https://images.unsplash.com/photo-1577563908411-5077b6dc7624?q=80&w=1000&auto=format&fit=crop"
-  },
-  {
-    title: "Segurança Total",
-    description: "Verificamos vendedores e protegemos os seus dados. Compre e venda com tranquilidade.",
-    icon: <ShieldCheck className="w-12 h-12 text-primary" />,
-    image: "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1000&auto=format&fit=crop"
-  }
-];
+import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
+import { useNavigate, Link } from 'react-router-dom';
+import { ShoppingBag, Video, MessageSquare, ShieldCheck, ArrowRight, Check } from 'lucide-react';
 
 export default function Onboarding() {
-  const [currentStep, setCurrentStep] = useState(0);
   const navigate = useNavigate();
+  const [accepted, setAccepted] = useState(false);
 
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      localStorage.setItem('hasSeenOnboarding', 'true');
-      navigate('/login');
+  useEffect(() => {
+    // Check if terms were accepted when returning from privacy/terms pages
+    if (localStorage.getItem('termsAccepted') === 'true') {
+      setAccepted(true);
     }
-  };
+  }, []);
 
-  const handleSkip = () => {
+  const handleStart = () => {
+    if (!accepted) {
+      alert("Para continuar, deves ler e aceitar os Termos e a Política de Privacidade.");
+      return;
+    }
     localStorage.setItem('hasSeenOnboarding', 'true');
+    localStorage.setItem('termsAccepted', 'true');
     navigate('/login');
   };
 
   return (
-    <div className="fixed inset-0 bg-background flex flex-col z-[100]">
-      {/* Skip Button */}
-      <div className="absolute top-6 right-6 z-10">
-        <button 
-          onClick={handleSkip}
-          className="text-zinc-500 text-[0.875rem] font-medium hover:text-white transition-colors"
-        >
-          Pular
-        </button>
-      </div>
-
-      <div className="flex-1 relative overflow-hidden flex flex-col">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentStep}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="flex-1 flex flex-col"
+    <div className="min-h-screen bg-background flex flex-col z-[100] pb-24 overflow-y-auto hide-scrollbar">
+      {/* Header */}
+      <header className="px-6 py-8 flex items-center justify-between sticky top-0 bg-background/50 backdrop-blur-xl z-20">
+        <div className="flex items-center">
+          <img src="/android-chrome-512x512.png" alt="Logo" className="w-11 h-11 object-contain" />
+        </div>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => navigate('/register')}
+            className="px-5 py-2 text-zinc-400 text-[0.9375rem] font-bold hover:text-white transition-colors"
           >
-            {/* Image Section */}
-            <div className="h-[50%] relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent z-10" />
-              <img 
-                src={steps[currentStep].image} 
-                className="w-full h-full object-cover grayscale-[0.2]" 
-                alt={steps[currentStep].title} 
-              />
+            Registar
+          </button>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="px-6 pt-10 pb-16 text-center flex flex-col items-center">
+        <motion.h1 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-[1.875rem] font-black leading-[1.2] mb-6 uppercase italic tracking-tighter"
+        >
+          <span className="bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-500 bg-clip-text text-transparent">
+            Compre e venda produtos rápido com a nossa plataforma boladas
+          </span>
+        </motion.h1>
+        
+        <motion.p 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="text-zinc-500 text-[1rem] leading-relaxed mb-10 max-w-sm px-4"
+        >
+          Conectamos vendedores e compradores em um só lugar. Venda mais rápido e se torne o mestre de vendas
+        </motion.p>
+
+        <motion.button 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          onClick={handleStart}
+          className={`px-12 ${accepted ? 'bg-blue-600 hover:bg-blue-700' : 'bg-zinc-800 cursor-not-allowed opacity-50'} text-white font-black h-14 rounded-2xl flex items-center justify-center gap-3 text-[1rem] shadow-xl active:scale-95 transition-all`}
+        >
+          ENTRAR
+          <ArrowRight className="w-5 h-5" />
+        </motion.button>
+      </section>
+
+      {/* Description Sections (Icon + Text) */}
+      <section className="px-8 mt-4 mb-16 flex flex-col gap-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="flex gap-5"
+        >
+          <div className="flex-shrink-0 mt-1">
+            <ShoppingBag className="w-7 h-7 text-white" />
+          </div>
+          <div className="flex flex-col gap-3">
+            <h2 className="text-white text-xl font-black uppercase italic tracking-tighter">Descobre e vende no teu feed</h2>
+            <p className="text-zinc-500 text-[1rem] leading-relaxed font-medium">
+              Explora produtos à venda em Moçambique, encontra boas ofertas e conecta-te com vendedores reais. Publica os teus produtos, alcança mais pessoas e começa a vender de forma simples e rápida.
+            </p>
+          </div>
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.1 }}
+          className="flex gap-5"
+        >
+          <div className="flex-shrink-0 mt-1">
+            <Video className="w-7 h-7 text-white" />
+          </div>
+          <div className="flex flex-col gap-3">
+            <h2 className="text-white text-xl font-black uppercase italic tracking-tighter">Anuncia com vídeos e alcança mais clientes</h2>
+            <p className="text-zinc-500 text-[1rem] leading-relaxed font-medium">
+              Cria anúncios em vídeo para mostrar os teus produtos de forma mais atrativa. Alcança pessoas em todo Moçambique e aumenta as tuas vendas com conteúdos que chamam atenção.
+            </p>
+            <div className="mt-1">
+              <span className="text-primary font-bold text-[0.875rem] uppercase tracking-wider">Transforma visualizações em clientes</span>
             </div>
+          </div>
+        </motion.div>
+      </section>
 
-            {/* Content Section */}
-            <div className="flex-1 px-8 pt-4 pb-12 flex flex-col items-center text-center">
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="mb-6 p-4 bg-primary/10 rounded-3xl"
-              >
-                {steps[currentStep].icon}
-              </motion.div>
+      {/* Acceptance Status */}
+      <section className="px-8 mb-12">
+        <div 
+          className="flex items-start gap-4 p-4 bg-zinc-900/30 rounded-2xl border border-white/5"
+        >
+          <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors ${accepted ? 'bg-primary border-primary' : 'border-zinc-700'}`}>
+            {accepted && <Check className="text-black w-4 h-4" strokeWidth={4} />}
+          </div>
+          <p className="text-zinc-500 text-[0.875rem] leading-snug">
+            {accepted ? (
+              <span>Termos e Política de Privacidade aceites. Pode entrar.</span>
+            ) : (
+              <span>
+                Para continuar, por favor leia e aceite os <Link to="/terms" onClick={(e) => e.stopPropagation()} className="text-white underline font-bold">Termos de Uso</Link> e a <Link to="/privacy" onClick={(e) => e.stopPropagation()} className="text-white underline font-bold">Política de Privacidade</Link>.
+              </span>
+            )}
+          </p>
+        </div>
+      </section>
 
-              <h1 className="text-[1.75rem] font-black text-white leading-tight mb-4 uppercase italic tracking-tighter">
-                {steps[currentStep].title}
-              </h1>
-              
-              <p className="text-[1rem] text-zinc-400 leading-relaxed max-w-sm">
-                {steps[currentStep].description}
-              </p>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-      {/* Footer */}
-      <div className="px-8 pb-12 flex flex-col items-center gap-8">
-        {/* Progress Dots */}
-        <div className="flex gap-2">
-          {steps.map((_, i) => (
-            <div 
-              key={i}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === currentStep ? 'w-8 bg-primary' : 'w-2 bg-zinc-800'
-              }`}
-            />
-          ))}
+      {/* Footer Area */}
+      <footer className="px-8 mt-auto py-12 bg-zinc-900/40 border-t border-white/5 space-y-8">
+        <div className="flex flex-col gap-4 text-center">
+          <img src="/android-chrome-512x512.png" alt="Logo" className="w-10 h-10 object-contain mx-auto opacity-50" />
+          <p className="text-zinc-600 text-[0.75rem] uppercase tracking-widest font-black italic">
+            Boladas &copy; {new Date().getFullYear()}
+          </p>
         </div>
 
-        {/* Action Button */}
-        <button 
-          onClick={handleNext}
-          className="w-full bg-primary hover:bg-primary-dark text-black font-black h-14 rounded-2xl flex items-center justify-center gap-2 group transition-all active:scale-95"
-        >
-          {currentStep === steps.length - 1 ? (
-            <>
-              COMEÇAR AGORA
-              <ArrowRight className="w-5 h-5" />
-            </>
-          ) : (
-            <>
-              PRÓXIMO
-              <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </>
-          )}
-        </button>
-      </div>
+        <div className="flex justify-center gap-8">
+          <Link to="/terms" className="text-zinc-500 hover:text-white transition-colors uppercase tracking-[0.1em] text-[0.625rem] font-black">Termos</Link>
+          <Link to="/privacy" className="text-zinc-500 hover:text-white transition-colors uppercase tracking-[0.1em] text-[0.625rem] font-black">Privacidade</Link>
+        </div>
+        
+        <div className="flex justify-center">
+          <button 
+            onClick={handleStart}
+            className="text-zinc-600 font-bold py-4 hover:text-white transition-colors uppercase tracking-[0.15em] text-[0.6875rem]"
+          >
+            Já tem conta? Clique aqui para entrar
+          </button>
+        </div>
+      </footer>
     </div>
   );
 }

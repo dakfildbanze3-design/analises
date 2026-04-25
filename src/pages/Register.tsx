@@ -30,6 +30,8 @@ export default function Register() {
         uid: user.uid,
         email: user.email,
         location: location,
+        acceptedTerms: localStorage.getItem('termsAccepted') === 'true',
+        termsAcceptedAt: serverTimestamp(),
         createdAt: serverTimestamp()
       }, { merge: true });
 
@@ -49,6 +51,8 @@ export default function Register() {
         uid: user.uid,
         email: user.email,
         location: '', // Will be filled later
+        acceptedTerms: localStorage.getItem('termsAccepted') === 'true',
+        termsAcceptedAt: serverTimestamp(),
         createdAt: serverTimestamp()
       }, { merge: true });
 

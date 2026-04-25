@@ -29,6 +29,8 @@ const Register = lazy(() => import('./pages/Register'));
 const ProfileSetup = lazy(() => import('./pages/ProfileSetup'));
 const ChatDetail = lazy(() => import('./pages/ChatDetail'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
+const Terms = lazy(() => import('./pages/Terms'));
+const Privacy = lazy(() => import('./pages/Privacy'));
 
 const PageLoader = () => (
   <div className="flex-1 flex items-center justify-center py-20 bg-background text-primary">
@@ -154,14 +156,14 @@ function AppContent() {
           notificationService.saveFCMToken(user.uid);
         }
 
-        const isAuthPage = ['/login', '/register', '/profile-setup', '/onboarding'].includes(location.pathname);
+        const isAuthPage = ['/login', '/register', '/profile-setup', '/onboarding', '/terms', '/privacy'].includes(location.pathname);
+        
+        if (user && ['/login', '/register', '/onboarding'].includes(location.pathname)) {
+          navigate('/');
+        }
+
         if (!user && !isAuthPage && !showSplash) {
-          const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding') === 'true';
-          if (!hasSeenOnboarding) {
-            navigate('/onboarding');
-          } else {
-            navigate('/login');
-          }
+          navigate('/onboarding');
         }
       },
       (error) => {
@@ -192,7 +194,7 @@ function AppContent() {
   const isDiscover = location.pathname === '/discover';
   const isAlerts = location.pathname === '/alerts';
   const isOnboarding = location.pathname === '/onboarding';
-  const isAuthPage = ['/login', '/register', '/profile-setup', '/onboarding'].includes(location.pathname);
+  const isAuthPage = ['/login', '/register', '/profile-setup', '/onboarding', '/terms', '/privacy'].includes(location.pathname);
 
   // Use SplashScreen to cover both the fixed timer and the firebase auth loading
   if (showSplash || loading) {
@@ -256,6 +258,8 @@ function AppContent() {
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile-setup" element={<ProfileSetup />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
           </Routes>
         </Suspense>
       </main>

@@ -71,39 +71,38 @@ service cloud.firestore {
     // Chats
     match /chats/{chatId} {
       allow read: if isSignedIn() && (
-        request.auth.uid in existing().get('participants', [])
+        request.auth.uid in resource.data.participants
       );
       allow create: if isSignedIn() && (
         request.auth.uid in incoming().get('participants', [])
       );
       allow update: if isSignedIn() && (
-        request.auth.uid in existing().get('participants', []) ||
+        request.auth.uid in resource.data.get('participants', []) ||
         request.auth.uid in incoming().get('participants', [])
       );
       allow delete: if isSignedIn() && (
-        request.auth.uid in existing().get('participants', [])
+        request.auth.uid in resource.data.participants
       );
     }
 
     // Messages
     match /messages/{messageId} {
       allow read: if isSignedIn() && (
-        request.auth.uid in existing().get('participants', []) ||
-        existing().get('sender_id', '') == request.auth.uid
+        request.auth.uid in resource.data.participants
       );
       allow create: if isSignedIn() && (
         incoming().sender_id == request.auth.uid &&
         request.auth.uid in incoming().get('participants', [])
       );
       allow update: if isSignedIn() && (
-        existing().sender_id == request.auth.uid ||
+        resource.data.sender_id == request.auth.uid ||
         (
-          request.auth.uid in existing().get('participants', []) &&
-          incoming().diff(existing()).affectedKeys().hasOnly(['status']) &&
+          request.auth.uid in resource.data.participants &&
+          incoming().diff(resource.data).affectedKeys().hasOnly(['status']) &&
           incoming().status == 'seen'
         )
       );
-      allow delete: if isSignedIn() && existing().sender_id == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.sender_id == request.auth.uid;
     }
 
     // Chat Settings / Notifications / etc.
@@ -111,27 +110,27 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && (
         settingId.split('_')[1] == request.auth.uid ||
         settingId.split('_')[0] == request.auth.uid ||
-        (existing() != null && existing().get('user_id', '') == request.auth.uid)
+        (resource.data != null && resource.data.get('user_id', '') == request.auth.uid)
       );
     }
 
     match /notifications/{notificationId} {
       allow read: if isSignedIn() && (
-        existing().get('toUserId', '') == request.auth.uid ||
-        existing().get('fromUserId', '') == request.auth.uid
+        resource.data.toUserId == request.auth.uid ||
+        resource.data.fromUserId == request.auth.uid
       );
       allow create: if isSignedIn() && incoming().fromUserId == request.auth.uid;
-      allow update: if isSignedIn() && existing().get('toUserId', '') == request.auth.uid;
-      allow delete: if isSignedIn() && existing().get('toUserId', '') == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.toUserId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.toUserId == request.auth.uid;
     }
 
     match /blocked_users/{blockId} {
       allow read: if isSignedIn() && (
         blockId.split('_')[0] == request.auth.uid ||
         blockId.split('_')[1] == request.auth.uid ||
-        (existing() != null && (
-          existing().get('blocker_id', '') == request.auth.uid ||
-          existing().get('blocked_id', '') == request.auth.uid
+        (resource.data != null && (
+          resource.data.get('blocker_id', '') == request.auth.uid ||
+          resource.data.get('blocked_id', '') == request.auth.uid
         ))
       );
       allow create: if isSignedIn() && incoming().blocker_id == request.auth.uid;
@@ -148,19 +147,28 @@ service cloud.firestore {
     }
 
     match /search_history/{historyId} {
-      allow read, delete: if isSignedIn() && existing().get('userId', '') == request.auth.uid;
+      allow read, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
       allow create: if isSignedIn() && incoming().userId == request.auth.uid;
     }
 
     // Calls (WebRTC)
     match /calls/{callId} {
-      allow read, update, create, delete: if isSignedIn() && (
-        incoming().get('caller_id', '') == request.auth.uid ||
-        incoming().get('receiver_id', '') == request.auth.uid ||
-        (existing() != null && (
-          existing().get('caller_id', '') == request.auth.uid ||
-          existing().get('receiver_id', '') == request.auth.uid
-        ))
+      allow read: if isSignedIn() && (
+        resource.data.caller_id == request.auth.uid ||
+        resource.data.receiver_id == request.auth.uid
+      );
+      allow create: if isSignedIn() && (
+        incoming().caller_id == request.auth.uid
+      );
+      allow update: if isSignedIn() && (
+        resource.data.caller_id == request.auth.uid ||
+        resource.data.receiver_id == request.auth.uid ||
+        incoming().caller_id == request.auth.uid ||
+        incoming().receiver_id == request.auth.uid
+      );
+      allow delete: if isSignedIn() && (
+        resource.data.caller_id == request.auth.uid ||
+        resource.data.receiver_id == request.auth.uid
       );
 
       match /callerCandidates/{id} { allow read, write: if isSignedIn(); }
@@ -176,10 +184,10 @@ service cloud.firestore {
     }
 
     match /payment_methods/{id} {
-      allow read, write: if isSignedIn() && (
-        (incoming() != null && incoming().get('user_id', '') == request.auth.uid) ||
-        (existing() != null && existing().get('user_id', '') == request.auth.uid)
-      );
+      allow read: if isSignedIn() && resource.data.user_id == request.auth.uid;
+      allow create: if isSignedIn() && incoming().user_id == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.user_id == request.auth.uid && incoming().user_id == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.user_id == request.auth.uid;
     }
   }
 }
