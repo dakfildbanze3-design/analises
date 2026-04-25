@@ -406,7 +406,17 @@ export default function ShortPlayer() {
                    className="w-full h-full object-contain"
                    controls
                    autoPlay
+                   loop={!product.trimEnd}
                    playsInline
+                   muted={product.videoMuted}
+                   onTimeUpdate={(e) => {
+                      if (product.trimEnd && product.trimEnd > 0) {
+                          if (e.currentTarget.currentTime >= product.trimEnd) {
+                              e.currentTarget.currentTime = product.trimStart || 0;
+                              e.currentTarget.play();
+                          }
+                      }
+                   }}
                  />
               );
            })()

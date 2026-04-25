@@ -14,13 +14,19 @@ async function cleanupSeedVideos() {
   
   try {
     const productsRef = collection(db, 'products');
-    for (const vidId of dummyIds) {
-      const q = query(productsRef, where('videoUrl', '==', `https://youtu.be/${vidId}`));
-      const snap = await getDocs(q);
-      for (const docSnap of snap.docs) {
-        await deleteDoc(doc(db, 'products', docSnap.id));
-        console.log(`Deleted ghost video: ${vidId}`);
+    const snap = await getDocs(productsRef);
+    let deletedCount = 0;
+    for (const docSnap of snap.docs) {
+      const data = docSnap.data();
+      if (data.videoUrl && typeof data.videoUrl === 'string') {
+        if (dummyIds.some(id => data.videoUrl.includes(id))) {
+          await deleteDoc(doc(db, 'products', docSnap.id));
+          deletedCount++;
+        }
       }
+    }
+    if (deletedCount > 0) {
+      console.log(`Deleted ${deletedCount} ghost videos.`);
     }
   } catch (e) {
     console.warn("Cleanup failed", e);

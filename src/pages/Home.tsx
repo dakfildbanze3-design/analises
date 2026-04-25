@@ -203,8 +203,16 @@ export default function Home() {
                       src={product.videoUrl} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       muted
-                      loop
+                      loop={!product.trimEnd}
                       playsInline
+                      onTimeUpdate={(e) => {
+                         if (product.trimEnd && product.trimEnd > 0) {
+                             if (e.currentTarget.currentTime >= product.trimEnd) {
+                                 e.currentTarget.currentTime = product.trimStart || 0;
+                                 e.currentTarget.play();
+                             }
+                         }
+                      }}
                     />
                   );
                 })()}
@@ -302,8 +310,16 @@ export default function Home() {
                                     src={videoProduct.videoUrl} 
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                     muted
-                                    loop
+                                    loop={!videoProduct.trimEnd}
                                     playsInline
+                                    onTimeUpdate={(e) => {
+                                       if (videoProduct.trimEnd && videoProduct.trimEnd > 0) {
+                                           if (e.currentTarget.currentTime >= videoProduct.trimEnd) {
+                                               e.currentTarget.currentTime = videoProduct.trimStart || 0;
+                                               e.currentTarget.play();
+                                           }
+                                       }
+                                    }}
                                   />
                                 );
                               })()}
@@ -361,8 +377,16 @@ export default function Home() {
                                     src={v.videoUrl} 
                                     className="w-full h-full object-cover"
                                     muted
-                                    loop
+                                    loop={!v.trimEnd}
                                     playsInline
+                                    onTimeUpdate={(e) => {
+                                       if (v.trimEnd && v.trimEnd > 0) {
+                                           if (e.currentTarget.currentTime >= v.trimEnd) {
+                                               e.currentTarget.currentTime = v.trimStart || 0;
+                                               e.currentTarget.play();
+                                           }
+                                       }
+                                    }}
                                   />
                                 );
                               }

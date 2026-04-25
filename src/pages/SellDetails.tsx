@@ -12,6 +12,7 @@ export default function SellDetails() {
   const routeLocation = useLocation();
   const capturedVideoUrl = routeLocation.state?.capturedVideoUrl;
   const capturedImages = routeLocation.state?.capturedImages || [];
+  const videoMeta = routeLocation.state?.videoMeta;
   
   const [videoUrl, setVideoUrl] = useState<string | null>(capturedVideoUrl || null);
   const [images, setImages] = useState<string[]>(capturedImages);
@@ -78,7 +79,14 @@ export default function SellDetails() {
 
         if (data?.publicUrl) {
           finalVideoUrl = data.publicUrl;
+          if (videoMeta && (videoMeta.start > 0 || videoMeta.end < Infinity)) {
+            finalVideoUrl += `#t=${videoMeta.start},${videoMeta.end}`;
+          }
         }
+      } else if (finalVideoUrl && videoMeta) {
+         if (videoMeta.start > 0 || videoMeta.end < Infinity) {
+            finalVideoUrl += `#t=${videoMeta.start},${videoMeta.end}`;
+         }
       }
 
       // Upload captured images if any
@@ -121,6 +129,9 @@ export default function SellDetails() {
           sellerPhone: phone,
           location: location || 'Maputo',
           videoUrl: finalVideoUrl || null,
+          videoMuted: videoMeta?.isMuted || false,
+          trimStart: videoMeta?.start || 0,
+          trimEnd: videoMeta?.end || 0,
           images: uploadedImages,
           productType: finalVideoUrl ? 'short' : 'physical',
           sellerId: auth.currentUser.uid,

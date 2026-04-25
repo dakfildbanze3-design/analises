@@ -114,13 +114,14 @@ export default function SellCamera() {
       <MediaEditor
         media={editingMedia}
         onCancel={() => setEditingMedia(null)}
-        onComplete={(urls, thumbUrl) => {
+        onComplete={(urls, thumbUrl, videoMeta) => {
           if (editingMedia.type === 'video') {
              // Pass the video and optionally the thumbnail
              navigate('/sell-details', { 
                state: { 
                  capturedVideoUrl: urls[0],
-                 capturedImages: thumbUrl ? [thumbUrl] : []
+                 capturedImages: thumbUrl ? [thumbUrl] : [],
+                 videoMeta
                } 
              });
           } else {

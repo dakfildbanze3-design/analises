@@ -6,7 +6,7 @@ import getCroppedImg from '../lib/imageEditorUtils';
 interface MediaEditorProps {
   media: { type: 'video' | 'image'; url: string; allUrls?: string[] };
   onCancel: () => void;
-  onComplete: (mediaUrls: string[], thumbnailUrl?: string) => void;
+  onComplete: (mediaUrls: string[], thumbnailUrl?: string, videoMeta?: { start: number, end: number, isMuted: boolean }) => void;
 }
 
 const FILTER_PRESETS: Record<string, { label: string, css: string }> = {
@@ -126,7 +126,8 @@ export default function MediaEditor({ media, onCancel, onComplete }: MediaEditor
              videoRef.current.currentTime = currentT;
            }
         }
-        onComplete([media.url], thumbUrl); 
+        const videoMeta = { start: trimStart, end: trimEnd, isMuted };
+        onComplete([media.url], thumbUrl, videoMeta); 
       }
     } catch (err) {
       console.error(err);
