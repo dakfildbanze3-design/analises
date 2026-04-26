@@ -1,8 +1,34 @@
 {
+  "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/((?!sitemap.xml|robots.txt).*)",
-      "destination": "/index.html"
+      "source": "/sitemap.xml",
+      "destination": "/sitemap.xml"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/robots.txt"
+    },
+    {
+      "source": "/ads.txt",
+      "destination": "/ads.txt"
+    },
+    {
+      "source": "/manifest.json",
+      "destination": "/manifest.json"
+    },
+    {
+      "source": "/sw.js",
+      "destination": "/sw.js"
+    },
+    {
+      "source": "/assets/(.*)",
+      "destination": "/assets/$1"
+    },
+    {
+      "source": "/((?!assets/).*)",
+      "destination": "/"
     }
   ]
 }

@@ -1,48 +1,108 @@
 <!doctype html>
 <html lang="pt">
-  <head>
-    <!-- VERIFICAÇÃO GOOGLE (CORRETO) -->
-    <meta name="google-site-verification" content="google0cddbba82a83cf33" />
+<head>
+  <!-- BASE -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <meta charset="UTF-8" />
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    
-    <title>Boladas</title>
+  <!-- TÍTULO SEO -->
+  <title>Boladas – Rede social e anúncios em Moçambique</title>
 
-    <!-- Favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="manifest" href="/manifest.json">
+  <!-- DESCRIÇÃO -->
+  <meta name="description" content="Boladas é uma plataforma em Moçambique para descobrir, compartilhar conteúdos, anúncios e serviços online." />
 
-    <!-- Theme color -->
-    <meta name="theme-color" content="#000000" />
+  <!-- KEYWORDS -->
+  <meta name="keywords" content="boladas, mozambique, anúncios, classificados, app moz, vender online, serviços mz" />
 
-    <!-- SEO básico (bônus importante) -->
-    <meta name="description" content="Boladas - o melhor app para compartilhar e explorar conteúdos" />
+  <!-- INDEXAÇÃO -->
+  <meta name="robots" content="index, follow" />
 
-    <!-- Open Graph (para partilha tipo WhatsApp/Facebook) -->
-    <meta property="og:title" content="Boladas" />
-    <meta property="og:description" content="Descobre e compartilha conteúdos incríveis no Boladas" />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://boladas.vercel.app/" />
+  <!-- CANONICAL -->
+  <link rel="canonical" href="https://boladas.vercel.app/" />
 
-    <!-- Google AdSense -->
-    <script 
-      async 
-      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7509073601077347" 
-      crossorigin="anonymous"
-    ></script>
-  </head>
+  <!-- GOOGLE VERIFICATION -->
+  <meta name="google-site-verification" content="google0cddbba82a83cf33" />
 
-  <body style="background-color: #131313;">
-    <div id="root">
-      <div style="height: 100vh; display: flex; align-items: center; justify-content: center; background-color: #131313; color: #b8c3ff; font-family: sans-serif; font-weight: bold; text-align: center; width: 100%;">
-        CARREGANDO BOLADAS...
-      </div>
+  <!-- GEO LOCAL (IMPORTANTE PRA MOZ) -->
+  <meta name="geo.region" content="MZ" />
+  <meta name="geo.placename" content="Mozambique" />
+
+  <!-- FAVICONS -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000" />
+  <meta name="mobile-web-app-capable" content="yes" />
+
+  <!-- OPEN GRAPH (WhatsApp / Facebook) -->
+  <meta property="og:title" content="Boladas – Rede social e anúncios em Moçambique" />
+  <meta property="og:description" content="Descobre conteúdos, anúncios e serviços em Moçambique." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://boladas.vercel.app/" />
+  <meta property="og:image" content="https://boladas.vercel.app/preview.png" />
+
+  <!-- TWITTER -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Boladas">
+  <meta name="twitter:description" content="Descobre conteúdos incríveis em Moçambique">
+  <meta name="twitter:image" content="https://boladas.vercel.app/preview.png">
+
+  <!-- DADOS ESTRUTURADOS (SEO AVANÇADO) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Boladas",
+    "url": "https://boladas.vercel.app/",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://boladas.vercel.app/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
+  <!-- GOOGLE ADSENSE -->
+  <script async 
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7509073601077347"
+    crossorigin="anonymous">
+  </script>
+
+</head>
+
+<body style="background-color: #131313; margin: 0;">
+
+  <!-- CONTEÚDO SEO (visível se JS não carregar) -->
+  <noscript>
+    <h1>Boladas – Rede social e anúncios em Moçambique</h1>
+    <p>Descobre conteúdos, anúncios e serviços em Moçambique. Plataforma para comprar, vender e compartilhar online.</p>
+  </noscript>
+
+  <!-- APP ROOT -->
+  <div id="root">
+    <div style="height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #131313; color: #b8c3ff; font-family: sans-serif; text-align: center; padding: 20px;">
+      
+      <!-- SEO leve (antes do React carregar) -->
+      <h1 style="font-size: 20px; margin-bottom: 10px;">
+        Boladas – Rede social em Moçambique
+      </h1>
+
+      <p style="font-size: 14px; margin-bottom: 20px; color: #9aa5ff;">
+        Descobre anúncios, serviços e conteúdos online.
+      </p>
+
+      <!-- Loading -->
+      <strong>CARREGANDO BOLADAS...</strong>
+
     </div>
+  </div>
 
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <!-- SCRIPT APP -->
+  <script type="module" src="/src/main.tsx"></script>
+
+</body>
 </html>
