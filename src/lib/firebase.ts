@@ -30,6 +30,7 @@ export const googleProvider = new GoogleAuthProvider();
 
 // Critical Connection Test
 async function testConnection() {
+  if (typeof window === 'undefined') return;
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
   } catch (error) {
@@ -54,8 +55,8 @@ if (typeof window !== 'undefined') {
 }
 
 // Initializing Supabase safely
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 let supabaseInstance: any = null;
 if (supabaseUrl && supabaseAnonKey) {
@@ -65,7 +66,7 @@ if (supabaseUrl && supabaseAnonKey) {
     console.error('Failed to initialize Supabase in firebase lib:', err);
   }
 } else {
-  console.warn('Supabase credentials missing (VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY). Storage features will be disabled.');
+  console.warn('Supabase credentials missing (NEXT_PUBLIC_SUPABASE_URL/NEXT_PUBLIC_SUPABASE_ANON_KEY). Storage features will be disabled.');
 }
 
 export const supabase = supabaseInstance;

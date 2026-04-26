@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from 'react';
 import { Smile, Heart, Flame, ThumbsUp, PartyPopper, Briefcase, Package } from 'lucide-react';
 

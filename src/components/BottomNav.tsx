@@ -1,12 +1,14 @@
+"use client";
 import React, { useState, useEffect } from 'react';
 import { Home, MessageSquare, PlusSquare, Bell, User, Users } from 'lucide-react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { notificationService } from '../services/notificationService';
 import { chatService } from '../services/chatService';
 import { auth } from '../lib/firebase';
 
 export default function BottomNav() {
-  const location = useLocation();
+  const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState(0);
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
 
@@ -32,35 +34,38 @@ export default function BottomNav() {
   const navItems = [
     { icon: Home, label: 'Início', path: '/' },
     { icon: MessageSquare, label: 'Chat', path: '/chat', badge: chatUnreadCount },
-    { icon: PlusSquare, label: 'Vender', path: '/sell-camera' },
+    { icon: PlusSquare, label: 'Vender', path: '/sell/camera' },
     { icon: Users, label: 'Seguindo', path: '/following' },
     { icon: User, label: 'Perfil', path: '/profile' },
   ];
 
   return (
     <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center h-16 px-2 glossy-black z-50 pb-2">
-      {navItems.map((item) => (
-        <NavLink
-          key={item.path}
-          to={item.path}
-          className={({ isActive }) => `
-            flex flex-col items-center justify-center pt-1 transition-all relative w-full
-            ${isActive ? 'text-white' : 'text-white/40 hover:text-white'}
-          `}
-        >
-          <item.icon 
-            size={18} 
-            strokeWidth={3} 
-            fill={location.pathname === item.path ? 'currentColor' : 'none'} 
-          />
-          <span className="text-[0.875rem] font-medium mt-0.5 lowercase">{item.label}</span>
-          {item.badge !== undefined && item.badge > 0 && (
-            <span className="absolute top-1 right-1/2 translate-x-4 bg-primary text-black text-[0.625rem] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-black">
-              {item.badge > 9 ? '9+' : item.badge}
-            </span>
-          )}
-        </NavLink>
-      ))}
+      {navItems.map((item) => {
+        const isActive = pathname === item.path;
+        return (
+          <Link
+            key={item.path}
+            href={item.path}
+            className={`
+              flex flex-col items-center justify-center pt-1 transition-all relative w-full
+              ${isActive ? 'text-white' : 'text-white/40 hover:text-white'}
+            `}
+          >
+            <item.icon 
+              size={18} 
+              strokeWidth={3} 
+              fill={isActive ? 'currentColor' : 'none'} 
+            />
+            <span className="text-[0.875rem] font-medium mt-0.5 lowercase">{item.label}</span>
+            {item.badge !== undefined && item.badge > 0 && (
+              <span className="absolute top-1 right-1/2 translate-x-4 bg-primary text-black text-[0.625rem] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-black">
+                {item.badge > 9 ? '9+' : item.badge}
+              </span>
+            )}
+          </Link>
+        );
+      })}
     </nav>
   );
 }

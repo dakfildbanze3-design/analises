@@ -5,7 +5,17 @@ export interface Product {
   oldPrice?: number;
   category: string;
   image: string;
+  images?: string[];
   description?: string;
+  sellerId?: string;
+  sellerName?: string;
+  sellerAvatar?: string;
+  videoUrl?: string;
+  productType?: 'short' | 'product';
+  likesCount?: number;
+  commentsCount?: number;
+  views?: number;
+  createdAt?: any;
 }
 
 export interface Chat {

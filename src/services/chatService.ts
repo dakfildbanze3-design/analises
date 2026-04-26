@@ -63,7 +63,7 @@ export const chatService = {
    * Upload de áudio para o Supabase Storage
    */
   async uploadAudio(blob: Blob): Promise<string> {
-    if (!supabase) throw new Error("Serviço de áudio não configurado (Falta VITE_SUPABASE_URL)");
+    if (!supabase) throw new Error("Serviço de áudio não configurado (Falta NEXT_PUBLIC_SUPABASE_URL)");
     const fileName = `${auth.currentUser?.uid}_${Date.now()}.m4a`;
     const { data, error } = await supabase.storage
       .from('chat-audio')
@@ -89,7 +89,7 @@ export const chatService = {
    * Upload de arquivo genérico para o Supabase Storage
    */
   async uploadFile(blob: Blob, bucket: string, extension: string): Promise<string> {
-    if (!supabase) throw new Error("Serviço de upload não configurado (Falta VITE_SUPABASE_URL)");
+    if (!supabase) throw new Error("Serviço de upload não configurado (Falta NEXT_PUBLIC_SUPABASE_URL)");
     const fileName = `${auth.currentUser?.uid}_${Date.now()}.${extension}`;
     const { data, error } = await supabase.storage
       .from(bucket)

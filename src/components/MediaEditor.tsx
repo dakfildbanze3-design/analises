@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { RefreshCcw, Check, Crop, RotateCcw, Settings2, Sparkles, Volume2, VolumeX, Scissors, Image as ImageIcon } from 'lucide-react';
 import Cropper from 'react-easy-crop';
@@ -424,7 +425,7 @@ function TabBtn({ icon, label, active, onClick }: { icon: React.ReactNode, label
       className={`flex flex-col items-center gap-2 transition-all w-[72px] rounded-xl py-2 ${active ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
     >
       <div className={`p-0 transition-colors ${active ? 'text-white scale-110 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'bg-transparent text-zinc-500'}`}>
-         {React.cloneElement(icon as React.ReactElement, { size: 24, strokeWidth: active ? 2.5 : 2 })}
+         {React.cloneElement(icon as any, { size: 24, strokeWidth: active ? 2.5 : 2 })}
       </div>
       <span className={`text-[0.65rem] font-bold tracking-widest uppercase ${active ? 'text-white opacity-100' : 'opacity-60'}`}>{label}</span>
     </button>

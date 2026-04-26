@@ -174,7 +174,7 @@ export const notificationService = {
       if (permission === 'granted') {
       */
         const token = await getToken(messaging, {
-          vapidKey: (import.meta as any).env.VITE_FIREBASE_VAPID_KEY
+          vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || process.env.VITE_FIREBASE_VAPID_KEY
         });
 
         if (token) {

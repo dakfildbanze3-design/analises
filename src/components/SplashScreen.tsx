@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -42,11 +43,16 @@ export default function SplashScreen({ onFinish, isReady }: SplashScreenProps) {
             transition={{ type: "spring", stiffness: 200, damping: 25 }}
             className="w-[200px] h-[200px]"
           >
+            <div className="w-full h-full flex items-center justify-center bg-zinc-900 rounded-[40px] border border-white/10">
+              <span className="text-6xl font-black text-primary italic tracking-tighter">B</span>
+            </div>
+            {/* 
             <img 
               src="/android-chrome-512x512.png" 
               alt="Logo" 
               className="w-full h-full object-contain"
             />
+            */}
           </motion.div>
         </motion.div>
       )}

@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #000000;
+  --color-surface: #000000;
+  --color-surface-container: #0a0a0a;
+  --color-surface-container-low: #050505;
+  --color-surface-container-high: #121212;
+  --color-surface-container-highest: #1a1a1a;
+  --color-primary: #007AFF;
+  --color-primary-container: #0056b3;
+  --color-on-primary-container: #ffffff;
+  --color-on-surface: #ffffff;
+  --color-on-surface-variant: #a1a1a1;
+  --color-outline: #333333;
+  --color-outline-variant: #222222;
+  --color-error: #ff453a;
+  
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-on-surface font-sans antialiased;
+    background-image: radial-gradient(circle at top, #111111 0%, #000000 100%);
+    background-attachment: fixed;
+  }
+}
+
+.glossy-black {
+  background-color: #000000;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.glass-black {
+  @apply backdrop-blur-xl bg-black/90;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.shiny-button {
+  @apply relative overflow-hidden transition-all duration-300 active:scale-95;
+  background-color: #007AFF;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

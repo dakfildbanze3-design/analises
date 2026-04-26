@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Check, Lock, Loader2, Smartphone, Shield, AlertTriangle } from 'lucide-react';

@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Camera, Loader2, Check } from 'lucide-react';
@@ -49,7 +50,7 @@ const PersonalInfo: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     setUploading(true);
     try {
       if (!supabase) {
-        throw new Error('Serviço de upload não configurado. Adicione VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY nas configurações.');
+        throw new Error('Serviço de upload não configurado. Adicione NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY nas configurações.');
       }
       const fileExt = file.name.split('.').pop();
       const fileName = `avatar-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;

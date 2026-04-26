@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Phone, PhoneOff, Video, VideoOff, Mic, MicOff, Camera, X } from 'lucide-react';

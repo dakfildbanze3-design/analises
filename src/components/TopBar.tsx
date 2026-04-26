@@ -1,6 +1,7 @@
+"use client";
 import React, { useState } from 'react';
 import { Menu, Search, ShoppingCart, ArrowLeft, Share2, MoreVertical, Settings, MessageCircle, Bug, X, Bell } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface TopBarProps {
@@ -10,8 +11,8 @@ interface TopBarProps {
 }
 
 export default function TopBar({ showBack, title = "BOLADAS", rightElement }: TopBarProps) {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleMenuClick = () => {
@@ -19,11 +20,7 @@ export default function TopBar({ showBack, title = "BOLADAS", rightElement }: To
   };
 
   const handleBack = () => {
-    if (window.history.state && window.history.state.idx > 0) {
-      navigate(-1);
-    } else {
-      navigate('/');
-    }
+    router.back();
   };
 
   const handleSupportClick = () => {
@@ -57,7 +54,7 @@ export default function TopBar({ showBack, title = "BOLADAS", rightElement }: To
               <Menu size={20} strokeWidth={3} />
             </button>
           )}
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
             <h1 className={`font-black text-white tracking-tighter ${
               title === "Notificações" || title === "Anúncios em shorts" 
                 ? "text-[20px]" 
@@ -72,16 +69,16 @@ export default function TopBar({ showBack, title = "BOLADAS", rightElement }: To
             rightElement
           ) : (
             <>
-              {location.pathname === '/' && (
+              {pathname === '/' && (
                 <div className="flex items-center gap-1">
                   <button 
-                    onClick={() => navigate('/alerts')}
+                    onClick={() => router.push('/alerts')}
                     className="text-on-surface hover:bg-surface-container-highest transition-colors p-1 rounded active:scale-95 transition-all"
                   >
                     <Bell size={20} strokeWidth={3} />
                   </button>
                   <button 
-                    onClick={() => navigate('/search')}
+                    onClick={() => router.push('/search')}
                     className="text-on-surface hover:bg-surface-container-highest transition-colors p-1 rounded active:scale-95 transition-all"
                   >
                     <Search size={20} strokeWidth={3} />
@@ -121,7 +118,7 @@ export default function TopBar({ showBack, title = "BOLADAS", rightElement }: To
               className="absolute top-12 left-4 w-48 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl z-[101] py-1 overflow-hidden"
             >
               <button 
-                onClick={() => { navigate('/settings'); setIsMenuOpen(false); }}
+                onClick={() => { router.push('/settings'); setIsMenuOpen(false); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-white/5 transition-colors active:bg-white/10"
               >
                 <Settings size={18} strokeWidth={3} className="text-white shrink-0" />
