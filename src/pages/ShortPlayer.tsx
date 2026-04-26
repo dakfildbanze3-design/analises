@@ -11,6 +11,9 @@ import { shareContent } from '../lib/shareUtils';
 import { chatService } from '../services/chatService';
 import AdBanner from '../components/AdBanner';
 import ReportModal from '../components/ReportModal';
+import { PRODUCT_CATEGORIES } from '../constants';
+
+const CATEGORIES_ALL = ['TUDO', ...PRODUCT_CATEGORIES.map(c => c.toUpperCase())];
 
 type CommentType = {
   id: string;
@@ -38,6 +41,7 @@ export default function ShortPlayer() {
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('TUDO');
   
   // Comments logic
   const [comments, setComments] = useState<CommentType[]>([]);
@@ -498,28 +502,28 @@ export default function ShortPlayer() {
         </div>
       </div>
 
-      {/* Badges Row (Price, Location, Phone, Category) - STICKY exactly below the sticky video */}
-      <div className="flex items-center gap-[4px] px-1 py-3 glass-black sticky top-[56.25vw] md:top-[252px] z-30 overflow-x-auto hide-scrollbar shadow-xl">
+      {/* Badges Row (Price, Location, Phone, Category) - Scrolls with the page */}
+      <div className="flex items-center gap-2 px-2 py-2 bg-zinc-900 overflow-x-auto hide-scrollbar">
           {/* Price Badge - High Visibility */}
-          <div className="flex items-center gap-1.5 px-4 py-2 bg-blue-900 border border-blue-800 rounded-[3px] text-[0.875rem] text-white font-black shadow-lg shadow-black whitespace-nowrap shrink-0 transition-transform active:scale-95">
+          <div className="flex items-center gap-1.5 px-4 py-2 bg-blue-900 rounded-[3px] text-[0.875rem] text-white font-black whitespace-nowrap shrink-0 transition-colors active:bg-white active:text-black cursor-pointer">
              <ShoppingBag size={14} className="opacity-80" />
              <span>{product.price} MT</span>
           </div>
           
           {product.location && (
-             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 rounded-[3px] text-[0.75rem] text-white/90 font-bold shadow-sm border border-white/5 whitespace-nowrap shrink-0">
+             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 rounded-[3px] text-[0.75rem] text-white/90 font-bold whitespace-nowrap shrink-0 transition-colors active:bg-white active:text-black cursor-pointer">
                 <MapPin size={14} className="opacity-70" />
                 <span>{product.location}</span>
              </div>
           )}
           {product.category && (
-             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800/80 rounded-[3px] text-[0.75rem] text-primary font-black shadow-sm border border-primary/20 whitespace-nowrap shrink-0">
+             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 rounded-[3px] text-[0.75rem] text-white/90 font-bold whitespace-nowrap shrink-0 transition-colors active:bg-white active:text-black cursor-pointer">
                 <Tag size={14} className="opacity-70" />
                 <span>{product.category}</span>
              </div>
           )}
           {product.sellerPhone && (
-             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 rounded-[3px] text-[0.75rem] text-white/90 font-bold shadow-sm border border-white/5 whitespace-nowrap shrink-0">
+             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 rounded-[3px] text-[0.75rem] text-white/90 font-bold whitespace-nowrap shrink-0 transition-colors active:bg-white active:text-black cursor-pointer">
                 <Phone size={14} className="opacity-70" />
                 <span>{product.sellerPhone}</span>
              </div>
@@ -533,7 +537,7 @@ export default function ShortPlayer() {
          <div className="flex items-center mb-3">
             <img 
                src={product.sellerAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${product.sellerId}`} 
-               className="w-[52px] h-[52px] rounded-full object-cover border-2 border-primary/20 shrink-0 cursor-pointer shadow-md" 
+               className="w-[58px] h-[58px] rounded-full object-cover shrink-0 cursor-pointer shadow-md" 
                onClick={() => navigate(`/user/${product.sellerId}`)}
                onError={(e) => {
                  (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${product.sellerId}`;
@@ -618,7 +622,7 @@ export default function ShortPlayer() {
          {/* Youtube Style Comments Box immediately under the info row */}
          <div 
             onClick={() => setIsCommentsOpen(true)}
-            className="bg-zinc-900/40 rounded-[10px] p-3 mt-3 w-full cursor-pointer hover:bg-zinc-800 transition-colors border border-white/5"
+            className="bg-zinc-900/40 rounded-[10px] p-3 mt-3 w-full cursor-pointer hover:bg-zinc-800 transition-colors"
          >
             <div className="flex items-center gap-2 mb-2">
                 <span className="text-[0.875rem] font-bold text-white">Comentários</span>
@@ -632,7 +636,7 @@ export default function ShortPlayer() {
                      alt="Avatar Comentário" 
                      loading="lazy"
                      decoding="async"
-                     className="w-6 h-6 rounded-full bg-zinc-800 flex-shrink-0 object-cover border border-white/10"
+                     className="w-6 h-6 rounded-full bg-zinc-800 flex-shrink-0 object-cover"
                      referrerPolicy="no-referrer"
                    />
                    <p className="text-[0.8125rem] text-white/90 line-clamp-2 leading-snug">
@@ -650,7 +654,7 @@ export default function ShortPlayer() {
 
          {/* Extra Actions for the Product (WhatsApp) - Hidden if own post */}
          {auth.currentUser?.uid !== product?.sellerId && (
-           <div className="flex items-center gap-2 mt-6 pt-6 border-t border-white/10">
+           <div className="flex items-center gap-2 mt-6 pt-6">
             <button 
                 onClick={handleMessageClick}
                 className="flex items-center gap-2 px-6 h-12 shiny-button rounded-full flex-1 justify-center shadow-2xl text-white font-black text-[0.875rem] tracking-[0.2em] uppercase"
@@ -663,17 +667,39 @@ export default function ShortPlayer() {
          <AdBanner useImageBackground={true} className="mt-4 mx-4" />
       </div>
 
-      {/* Up Next List (Grid of 2 horizontal video cards) */}
-      <div className="border-t border-outline-variant/10 bg-surface px-1.5 py-4">
-         <div className="grid grid-cols-2 gap-[6px]">
-            {relatedVideos.map((item, index) => (
+      {/* Up Next List (Grid of 1 vertical video card) */}
+      <div className="bg-surface pt-2">
+         {/* Categories Sticky Bar */}
+         <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
+            className="sticky top-[56.25vw] md:top-[252px] z-30 py-4 px-3 overflow-x-auto hide-scrollbar flex gap-2 mb-2"
+         >
+            {CATEGORIES_ALL.map((cat, idx) => (
+               <motion.div 
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: 0.3 + (idx * 0.05) }}
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`flex-shrink-0 px-5 py-2 rounded-[3px] text-[0.75rem] font-bold uppercase tracking-widest cursor-pointer transition-all duration-200 whitespace-nowrap
+                  ${activeCategory === cat ? 'bg-white text-black shadow-lg scale-105' : 'bg-zinc-800 text-white/70 hover:bg-zinc-700'}`}
+               >
+                  {cat}
+               </motion.div>
+            ))}
+         </motion.div>
+
+         <div className="grid grid-cols-1 gap-4 pb-4">
+            {relatedVideos.filter(item => activeCategory === 'TUDO' || item.category === activeCategory).map((item, index) => (
                 <div 
                   key={`related-${item.id}-${index}`}
-                  className="flex flex-col bg-background rounded-[10px] overflow-hidden shadow-sm border border-outline-variant/5 h-full"
+                  className="flex flex-col bg-background shadow-md"
                 >
                   {/* Video Content FIRST */}
                   <div 
-                     className="relative w-full aspect-video bg-black cursor-pointer overflow-hidden"
+                     className="relative w-full h-[250px] bg-black cursor-pointer overflow-hidden"
                      onClick={() => {
                         navigate(`/short/${item.id}`);
                         window.scrollTo(0,0);
@@ -706,19 +732,27 @@ export default function ShortPlayer() {
                       </div>
                    </div>
  
-                   {/* Title & Price BELOW Video - Optimized for 2-column grid */}
-                   <div className="p-2 flex flex-col flex-1">
-                      <h3 className="text-[0.75rem] leading-snug font-bold text-on-surface line-clamp-2 min-h-[2.4em]">
-                         {item.name}
-                      </h3>
-                      
-                      <div className="mt-2 flex items-center justify-between">
-                         <span className="text-[0.6875rem] font-black text-blue-800">
-                            {item.price} MT
-                         </span>
-                         <span className="text-[0.625rem] text-on-surface-variant font-medium opacity-60">
-                            {item.views || 0} v
-                         </span>
+                   {/* Title & Price BELOW Video - Optimized for 1-column grid */}
+                   <div className="p-3 flex gap-4 flex-1 items-start">
+                      <img 
+                        src={item.sellerAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.sellerId}`} 
+                        className="w-14 h-14 rounded-full object-cover shrink-0 bg-background" 
+                        alt="Avatar"
+                        onError={(e) => {
+                           (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.sellerId}`;
+                        }}
+                      />
+                      <div className="flex flex-col flex-1 min-w-0">
+                         <h3 className="text-[1.05rem] leading-snug line-clamp-3">
+                            <span className="font-bold text-white">{item.name}</span>
+                            {item.description ? <span className="font-normal text-white/90 ml-1">- {item.description}</span> : ''}
+                         </h3>
+                         
+                         <div className="mt-1 flex items-center">
+                            <span className="text-[0.8rem] text-white/60 font-medium tracking-wide">
+                               {item.views || 0} visualizações &bull; {formatRelativeTime(item.createdAt?.toDate ? item.createdAt.toDate() : (item.createdAt ? new Date(item.createdAt) : new Date()))}
+                            </span>
+                         </div>
                       </div>
                    </div>
                 </div>
@@ -737,7 +771,7 @@ export default function ShortPlayer() {
             className="fixed inset-0 z-50 glass-black flex flex-col pointer-events-auto h-screen w-full"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-white/10 glass-black shrink-0">
+            <div className="flex items-center justify-between p-4 glass-black shrink-0">
               <h2 className="text-[1.125rem] font-bold text-white">Comentários</h2>
               <button 
                  onClick={() => setIsCommentsOpen(false)} 
@@ -753,7 +787,7 @@ export default function ShortPlayer() {
                {comments.map((comment) => (
                   <div key={comment.id} className="flex flex-col gap-3">
                      <div className="flex gap-3">
-                        <img src={comment.avatar} className="w-8 h-8 rounded-full border border-white/20 shrink-0 object-cover" />
+                        <img src={comment.avatar} className="w-8 h-8 rounded-full shrink-0 object-cover" />
                         <div className="flex-1 min-w-0">
                            <div className="flex justify-between items-end mb-1">
                              <span className="text-[0.85rem] font-bold text-on-surface/90">{comment.username}</span>
@@ -777,10 +811,9 @@ export default function ShortPlayer() {
                      {/* Replies */}
                      {comment.replies.map(reply => (
                         <div key={reply.id} className="flex gap-3 ml-11 relative">
-                           {/* Connecting Line */}
-                           <div className="absolute -left-7 top-0 w-6 h-6 border-l-2 border-b-2 border-white/20 rounded-bl-[12px]"></div>
+                           {/* Connecting Line removed */}
                            
-                           <img src={reply.avatar} className="w-7 h-7 rounded-full border border-white/20 shrink-0 object-cover" />
+                           <img src={reply.avatar} className="w-7 h-7 rounded-full shrink-0 object-cover" />
                            <div className="flex-1 min-w-0">
                             <div className="flex justify-between items-end mb-1">
                                 <span className="text-[0.85rem] font-bold text-on-surface/90">{reply.username}</span>
@@ -807,20 +840,20 @@ export default function ShortPlayer() {
             </div>
 
             {/* Input area Footer */}
-            <div className="flex flex-col bg-black shrink-0 border-t border-white/5">
+            <div className="flex flex-col bg-black shrink-0 pb-6">
                {replyingTo && (
                   <div className="px-4 py-2 bg-white/5 flex items-center justify-between">
-                     <span className="text-[0.75rem] text-white/50">
+                     <span className="text-[0.8rem] text-white/50">
                         A responder a <span className="font-bold text-white/80">{replyingTo.username}</span>
                      </span>
                      <button onClick={() => setReplyingTo(null)} className="text-white/40 hover:text-white p-1">
-                        <X size={14} />
+                        <X size={16} />
                      </button>
                   </div>
                )}
-               <div className="p-3 flex items-center gap-3">
-                 <img src={auth.currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${auth.currentUser?.uid || 'guest'}`} className="w-8 h-8 rounded-full bg-zinc-800 shrink-0 object-cover border border-white/10" />
-                 <div className="flex-1 bg-zinc-900 rounded-full flex items-center px-4 h-10 border border-white/10">
+               <div className="p-4 flex items-center gap-3">
+                 <img src={auth.currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${auth.currentUser?.uid || 'guest'}`} className="w-12 h-12 rounded-full bg-zinc-800 shrink-0 object-cover" />
+                 <div className="flex-1 bg-zinc-800 rounded-full flex items-center px-6 h-14">
                    <input 
                       ref={commentInputRef}
                       value={commentText}
@@ -828,18 +861,17 @@ export default function ShortPlayer() {
                       onKeyDown={(e) => e.key === 'Enter' && handleSendComment()}
                       type="text" 
                       placeholder="Adicione um comentário..." 
-                      className="bg-transparent border-none outline-none w-full text-[0.875rem] text-white placeholder:text-white/30" 
+                      className="bg-transparent outline-none w-full text-[1rem] text-white placeholder:text-white/60" 
                    />
                    <button 
                       onClick={handleSendComment}
                       disabled={!commentText.trim()}
-                      className={`ml-2 w-7 h-7 flex items-center justify-center shrink-0 rounded-full transition-all ${commentText.trim() ? 'bg-blue-900 text-white' : 'opacity-20 text-white'}`}
+                      className={`ml-3 w-10 h-10 flex items-center justify-center shrink-0 rounded-full transition-all ${commentText.trim() ? 'bg-blue-900 text-white' : 'opacity-20 text-white'}`}
                    >
-                      <Send size={14} fill="currentColor" />
+                      <Send size={18} fill="currentColor" />
                    </button>
                  </div>
                </div>
-               <div className="h-6" /> {/* Spacer for bottom area */}
             </div>
           </motion.div>
       )}
